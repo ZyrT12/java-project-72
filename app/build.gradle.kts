@@ -54,6 +54,13 @@ tasks.shadowJar {
     archiveBaseName.set("HexletJavalin")
     archiveClassifier.set("")
     archiveVersion.set("1.0-SNAPSHOT")
+    filePermissions {
+        user {
+            read = true
+            execute = true
+        }
+        other.execute = false
+    }
 }
 
 tasks.test {
@@ -67,3 +74,4 @@ tasks.test {
         showStandardStreams = true
     }
 }
+
