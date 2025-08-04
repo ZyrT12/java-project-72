@@ -13,10 +13,10 @@ public abstract class BaseRepository {
 
     /**
      * Constructs a new BaseRepository instance.
-     * @param dataSource the DataSource to use for database connections
+     * @param source the DataSource to use for database connections
      */
-    protected BaseRepository(final DataSource dataSource) {
-        this.dataSource = dataSource;
+    protected BaseRepository(final DataSource source) {
+        this.dataSource = source;
     }
 
     /**
