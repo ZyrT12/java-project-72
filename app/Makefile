@@ -2,7 +2,8 @@
 run-dist:
 	./build/install/app/bin/app
 
-etup:
+setup:
+	chmod +x app/gradlew
 	./gradlew wrapper --gradle-version 8.14
 
 clean:
