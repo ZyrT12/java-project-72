@@ -1,5 +1,8 @@
 package hexlet.code.model;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.sql.Timestamp;
 
 public final class Url {
@@ -7,8 +10,9 @@ public final class Url {
     private String name;
     private Timestamp createdAt;
 
-    public Url(final String urlName) {
-        this.name = urlName;
+    public Url(String url) throws MalformedURLException {
+        URL parsedUrl = URI.create(url).toURL();
+        this.name = parsedUrl.getProtocol() + "://" + parsedUrl.getAuthority();
         this.createdAt = new Timestamp(System.currentTimeMillis());
     }
 

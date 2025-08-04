@@ -5,35 +5,35 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * Base repository class providing common database operations.
- * Designed for extension with proper documentation.
+ * Abstract base class for all repository implementations.
+ * Provides common database operations and connection management.
  */
-public class BaseRepository {
+public abstract class BaseRepository {
     private final DataSource dataSource;
 
     /**
-     * Constructs a BaseRepository with specified data source.
-     * @param source the DataSource to be used for connections
+     * Constructs a new BaseRepository instance.
+     * @param dataSource the DataSource to use for database connections
      */
-    public BaseRepository(final DataSource source) {
-        this.dataSource = source;
-    }
-
-    /**
-     * Gets the data source instance.
-     * @return the configured DataSource
-     */
-    public DataSource getDataSource() {
-        return dataSource;
+    protected BaseRepository(final DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     /**
      * Gets a database connection from the data source.
-     * Caller is responsible for closing the connection.
+     * Caller is responsible for properly closing the connection.
      * @return a new database Connection
      * @throws SQLException if a database access error occurs
      */
-    public Connection getConnection() throws SQLException {
+    protected final Connection getConnection() throws SQLException {
         return dataSource.getConnection();
+    }
+
+    /**
+     * Gets the data source used by this repository.
+     * @return the DataSource instance
+     */
+    protected final DataSource getDataSource() {
+        return dataSource;
     }
 }
