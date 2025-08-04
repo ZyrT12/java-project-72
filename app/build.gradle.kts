@@ -48,12 +48,10 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-tasks {
-    shadowJar {
-        archiveBaseName.set("app")
-        archiveClassifier.set("")
-        archiveVersion.set("")
-    }
+tasks.shadowJar {
+    archiveBaseName.set("HexletJavalin")
+    archiveClassifier.set("")
+    archiveVersion.set("1.0-SNAPSHOT")
 }
 
 tasks.test {
