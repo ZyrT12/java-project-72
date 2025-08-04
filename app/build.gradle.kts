@@ -19,7 +19,7 @@ sonar {
 }
 
 application {
-    mainClass.set("org.example.hexlet.HelloWorld")
+    mainClass.set("hexlet.code.App")
 }
 
 group = "hexlet.code"
@@ -46,6 +46,14 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.12.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks {
+    shadowJar {
+        archiveBaseName.set("app")
+        archiveClassifier.set("")
+        archiveVersion.set("")
+    }
 }
 
 tasks.test {
