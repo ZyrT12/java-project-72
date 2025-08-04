@@ -7,4 +7,4 @@ Page Analyzer
 ## Demo
 
 The application is deploying on Render.com:  
-👉 https://your-app-name.onrender.com
+👉 https://java-project-72-euit.onrender.com

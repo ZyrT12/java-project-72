@@ -1,5 +1,7 @@
 package hexlet.code;
 
+import hexlet.code.db.DataBase;
+import hexlet.code.db.Migration;
 import io.javalin.Javalin;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,6 +22,8 @@ public final class App {
     }
 
     public static void main(String[] args) {
+        DataBase.init();
+        Migration.run(DataBase.getDataSource());
         var app = getApp();
         app.start(getPort());
     }
