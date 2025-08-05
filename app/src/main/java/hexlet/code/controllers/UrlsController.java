@@ -10,26 +10,14 @@ import java.net.URI;
 import java.sql.SQLException;
 import java.util.Map;
 
-/**
- * Controller for handling URL-related operations.
- * Provides endpoints for URL management.
- */
 public final class UrlsController {
     private static final int SERVER_ERROR_CODE = 500;
     private final UrlRepository urlRepository;
 
-    /**
-     * Constructs new UrlsController instance.
-     * @param urlRepositoryParam UrlRepository instance to use
-     */
     public UrlsController(final UrlRepository urlRepositoryParam) {
         this.urlRepository = urlRepositoryParam;
     }
 
-    /**
-     * Handles request to display all URLs.
-     * @param ctx Javalin context
-     */
     public void index(final Context ctx) {
         try {
             var urls = urlRepository.findAll();
@@ -39,27 +27,20 @@ public final class UrlsController {
         }
     }
 
-    /**
-     * Handles request to display single URL details.
-     * @param ctx Javalin context
-     */
     public void show(final Context ctx) {
         try {
             var id = ctx.pathParamAsClass("id", Long.class).get();
             var url = urlRepository.findById(id)
                     .orElseThrow(() -> new NotFoundResponse("Url not found"));
-            ctx.render("urls/show.jte", Map.of("url", url));
+            ctx.render("urls/show.jte", Map.of(
+                    "url", url,
+                    "checks", checks
+            ));
         } catch (SQLException e) {
             ctx.status(SERVER_ERROR_CODE).result("Server error: Failed to retrieve URL");
         }
     }
 
-
-
-    /**
-     * Handles URL creation request.
-     * @param ctx Javalin context
-     */
     public void create(final Context ctx) {
         var input = ctx.formParam("url");
         if (input == null || input.isBlank()) {
@@ -87,7 +68,7 @@ public final class UrlsController {
             ctx.status(SERVER_ERROR_CODE).result("Server error: Failed to save URL");
             return;
         }
-        ctx.redirect("/"); // Перенаправляем на главную страницу
+        ctx.redirect("/");
     }
 
     private void setFlashMessage(final Context ctx, final String message, final String type) {

@@ -4,9 +4,11 @@ import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
 import gg.jte.resolve.ResourceCodeResolver;
 import hexlet.code.controllers.UrlsController;
+import hexlet.code.controllers.UrlCheckController;
 import hexlet.code.db.DataBase;
 import hexlet.code.db.Migration;
 import hexlet.code.repository.UrlRepository;
+import hexlet.code.repository.UrlCheckRepository;
 import io.javalin.Javalin;
 import io.javalin.rendering.template.JavalinJte;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +33,9 @@ public final class App {
     }
 
     public static Javalin getApp() {
-        var urlRepository = new UrlRepository(DataBase.getDataSource());
+        var dataSource = DataBase.getDataSource();
+        var urlRepository = new UrlRepository(dataSource);
+        var urlCheckRepository = new UrlCheckRepository(dataSource);
 
         var app = Javalin.create(config -> {
             config.bundledPlugins.enableDevLogging();
@@ -43,7 +47,6 @@ public final class App {
             String flashType = ctx.consumeSessionAttribute("flashType");
 
             Map<String, Object> model = new HashMap<>();
-            // передаём переменные даже если null
             model.put("flash", flash);
             model.put("flashType", flashType);
 
@@ -56,9 +59,12 @@ public final class App {
         });
 
         var urlController = new UrlsController(urlRepository);
+        var urlCheckController = new UrlCheckController(urlRepository, urlCheckRepository);
+
         app.get("/urls", urlController::index);
         app.get("/urls/{id}", urlController::show);
         app.post("/urls", urlController::create);
+        app.post("/urls/{id}", urlCheckController::check); // <--- добавлено
 
         return app;
     }
