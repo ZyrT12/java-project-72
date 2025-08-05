@@ -8,7 +8,6 @@ import hexlet.code.db.DataBase;
 import hexlet.code.db.Migration;
 import hexlet.code.repository.UrlRepository;
 import io.javalin.Javalin;
-import io.javalin.http.HttpStatus;
 import io.javalin.rendering.template.JavalinJte;
 import lombok.extern.slf4j.Slf4j;
 
