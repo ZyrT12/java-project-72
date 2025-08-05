@@ -39,19 +39,13 @@ public final class App {
         });
 
         app.get("/", ctx -> {
-            String flash = ctx.sessionAttribute("flash");
-            String flashType = ctx.sessionAttribute("flashType");
-
-            ctx.sessionAttribute("flash", null);
-            ctx.sessionAttribute("flashType", null);
+            String flash = ctx.consumeSessionAttribute("flash");
+            String flashType = ctx.consumeSessionAttribute("flashType");
 
             Map<String, Object> model = new HashMap<>();
-            if (flash != null) {
-                model.put("flash", flash);
-            }
-            if (flashType != null) {
-                model.put("flashType", flashType);
-            }
+            // передаём переменные даже если null
+            model.put("flash", flash);
+            model.put("flashType", flashType);
 
             try {
                 ctx.render("index.jte", model);

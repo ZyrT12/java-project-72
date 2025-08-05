@@ -1,7 +1,11 @@
 @import hexlet.code.model.Url
+@import java.util.List
+@import hexlet.code.util.FormatTimestamp
 @param List<Url> urls
 @param String flash
 @param String flashType
+
+
 
 <!DOCTYPE html>
 <html lang="ru">
@@ -35,15 +39,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @for (url in urls)
-                        <tr>
-                            <td>${url.getId()}</td>
-                            <td>
-                                <a href="/urls/${url.getId()}">${url.getName()}</a>
-                            </td>
-                            <td>${url.getCreatedAt()}</td>
-                        </tr>
-                    @endfor
+                @for (var url : urls)
+                    <tr>
+                        <td>${url.getId()}</td>
+                        <td>
+                            <a href="/urls/${url.getId()}">${url.getName()}</a>
+                        </td>
+                        <td>${FormatTimestamp.convert(url.getCreatedAt())}
+                        </td>
+                    </tr>
+                @endfor
+
                 </tbody>
             </table>
         </div>

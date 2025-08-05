@@ -1,3 +1,7 @@
+@param String flash
+@param String flashType
+
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -47,4 +51,3 @@
     </footer>
 </body>
 </html>
-
