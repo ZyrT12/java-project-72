@@ -8,9 +8,11 @@ import hexlet.code.db.DataBase;
 import hexlet.code.db.Migration;
 import hexlet.code.repository.UrlRepository;
 import io.javalin.Javalin;
+import io.javalin.http.HttpStatus;
 import io.javalin.rendering.template.JavalinJte;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -38,11 +40,22 @@ public final class App {
         });
 
         app.get("/", ctx -> {
+            String flash = ctx.sessionAttribute("flash");
+            String flashType = ctx.sessionAttribute("flashType");
+
+            ctx.sessionAttribute("flash", null);
+            ctx.sessionAttribute("flashType", null);
+
+            Map<String, Object> model = new HashMap<>();
+            if (flash != null) {
+                model.put("flash", flash);
+            }
+            if (flashType != null) {
+                model.put("flashType", flashType);
+            }
+
             try {
-                ctx.render("index.jte", Map.of(
-                        "flash", ctx.sessionAttribute("flash"),
-                        "flashType", ctx.sessionAttribute("flashType")
-                ));
+                ctx.render("index.jte", model);
             } catch (Exception e) {
                 ctx.status(INTERNAL_SERVER_ERROR).result("Template rendering error: " + e.getMessage());
                 e.printStackTrace();

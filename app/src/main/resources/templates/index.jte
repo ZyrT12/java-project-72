@@ -18,7 +18,7 @@
             <h1>Анализатор страниц</h1>
             <p>Бесплатно проверяйте сайты на SEO-пригодность</p>
 
-            @if (flash != null)
+            @if (flash != null && flashType != null)
                 <div class="alert alert-${flashType}">${flash}</div>
             @endif
 
