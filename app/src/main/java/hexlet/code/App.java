@@ -8,6 +8,7 @@ import hexlet.code.db.DataBase;
 import hexlet.code.db.Migration;
 import hexlet.code.repository.UrlRepository;
 import io.javalin.Javalin;
+import io.javalin.http.HttpStatus;
 import io.javalin.rendering.template.JavalinJte;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,6 +16,8 @@ import java.util.Map;
 
 @Slf4j
 public final class App {
+
+    private static final int INTERNAL_SERVER_ERROR = 500;
 
     private static int getPort() {
         String port = System.getenv().getOrDefault("PORT", "7070");
@@ -42,8 +45,8 @@ public final class App {
                         "flashType", ctx.sessionAttribute("flashType")
                 ));
             } catch (Exception e) {
-                ctx.status(500).result("Template rendering error: " + e.getMessage());
-                e.printStackTrace(); 
+                ctx.status(INTERNAL_SERVER_ERROR).result("Template rendering error: " + e.getMessage());
+                e.printStackTrace();
             }
         });
 
