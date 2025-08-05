@@ -11,6 +11,8 @@ import io.javalin.Javalin;
 import io.javalin.rendering.template.JavalinJte;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
+
 @Slf4j
 public final class App {
 
@@ -34,7 +36,15 @@ public final class App {
         });
 
         app.get("/", ctx -> {
-            ctx.render("index.jte");
+            try {
+                ctx.render("index.jte", Map.of(
+                        "flash", ctx.sessionAttribute("flash"),
+                        "flashType", ctx.sessionAttribute("flashType")
+                ));
+            } catch (Exception e) {
+                ctx.status(500).result("Template rendering error: " + e.getMessage());
+                e.printStackTrace(); 
+            }
         });
 
         var urlController = new UrlsController(urlRepository);
