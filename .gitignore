@@ -1,6 +1,8 @@
 # IntelliJ IDEA
 app/.idea/
 *.iml
+*.ipr
+*.iws
 
 # IDE files
 .idea/

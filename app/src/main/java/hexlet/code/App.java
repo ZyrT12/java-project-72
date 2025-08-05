@@ -33,11 +33,14 @@ public final class App {
             config.fileRenderer(new JavalinJte(createTemplateEngine()));
         });
 
+        app.get("/", ctx -> {
+            ctx.render("index.jte");
+        });
+
         var urlController = new UrlsController(urlRepository);
         app.get("/urls", urlController::index);
         app.get("/urls/{id}", urlController::show);
         app.post("/urls", urlController::create);
-
 
         return app;
     }

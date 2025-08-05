@@ -85,7 +85,7 @@ public final class UrlsController {
             ctx.status(SERVER_ERROR_CODE).result("Server error: Failed to save URL");
             return;
         }
-        ctx.redirect("/");
+        ctx.redirect("/"); // Перенаправляем на главную страницу
     }
 
     private void setFlashMessage(final Context ctx, final String message, final String type) {
