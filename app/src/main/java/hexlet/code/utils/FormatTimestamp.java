@@ -1,4 +1,4 @@
-package hexlet.code.util;
+package hexlet.code.utils;
 
 import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;

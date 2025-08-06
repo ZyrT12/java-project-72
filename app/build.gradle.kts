@@ -45,6 +45,7 @@ dependencies {
     implementation("org.postgresql:postgresql:42.7.3")
     implementation("org.jsoup:jsoup:1.17.2")
 
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     testImplementation("org.assertj:assertj-core:3.27.3")
     testImplementation(platform("org.junit:junit-bom:5.12.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -76,3 +77,19 @@ tasks.test {
     }
 }
 
+tasks {
+    processResources {
+        duplicatesStrategy = DuplicatesStrategy.WARN
+    }
+    processTestResources {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
+}
+
+sourceSets {
+    test {
+        resources {
+            srcDirs("src/test/resources", "src/main/resources")
+        }
+    }
+}

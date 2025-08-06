@@ -14,7 +14,6 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 
 public final class UrlCheckController {
-
     private final UrlRepository urlRepository;
     private final UrlCheckRepository urlCheckRepository;
 
@@ -31,6 +30,7 @@ public final class UrlCheckController {
 
         try {
             Document document = Jsoup.connect(url.getName()).get();
+            int statusCode = 200;
             String title = document.title();
             String h1 = document.selectFirst("h1") != null ? document.selectFirst("h1").text() : "";
             String description = document.selectFirst("meta[name=description]") != null
@@ -38,7 +38,7 @@ public final class UrlCheckController {
 
             UrlCheck check = new UrlCheck(
                     url.getId(),
-                    200,
+                    statusCode,
                     title,
                     h1,
                     description,
@@ -48,7 +48,6 @@ public final class UrlCheckController {
 
             ctx.sessionAttribute("flash", "Проверка прошла успешно");
             ctx.sessionAttribute("flashType", "success");
-
         } catch (IOException e) {
             ctx.sessionAttribute("flash", "Проверка не удалась: " + e.getMessage());
             ctx.sessionAttribute("flashType", "danger");

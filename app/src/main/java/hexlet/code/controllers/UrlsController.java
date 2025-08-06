@@ -1,47 +1,53 @@
 package hexlet.code.controllers;
 
 import hexlet.code.model.Url;
+import hexlet.code.model.UrlCheck;
+import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
 import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
 
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public final class UrlsController {
     private static final int SERVER_ERROR_CODE = 500;
     private final UrlRepository urlRepository;
+    private final UrlCheckRepository urlCheckRepository;
 
-    public UrlsController(final UrlRepository urlRepositoryParam) {
-        this.urlRepository = urlRepositoryParam;
+    public UrlsController(UrlRepository urlRepository, UrlCheckRepository urlCheckRepository) {
+        this.urlRepository = urlRepository;
+        this.urlCheckRepository = urlCheckRepository;
     }
 
-    public void index(final Context ctx) {
-        try {
-            var urls = urlRepository.findAll();
-            ctx.render("urls/index.jte", Map.of("urls", urls));
-        } catch (SQLException e) {
-            ctx.status(SERVER_ERROR_CODE).result("Server error: Failed to retrieve URLs");
-        }
+    public void index(Context ctx) throws SQLException {
+        var urls = urlRepository.findAll();
+        var checks = urlCheckRepository.findLatestChecks();
+        ctx.render("urls/index.jte", Map.of(
+                "urls", urls,
+                "checks", checks
+        ));
     }
 
-    public void show(final Context ctx) {
-        try {
-            var id = ctx.pathParamAsClass("id", Long.class).get();
-            var url = urlRepository.findById(id)
-                    .orElseThrow(() -> new NotFoundResponse("Url not found"));
-            ctx.render("urls/show.jte", Map.of(
-                    "url", url,
-                    "checks", checks
-            ));
-        } catch (SQLException e) {
-            ctx.status(SERVER_ERROR_CODE).result("Server error: Failed to retrieve URL");
-        }
+    public void show(Context ctx) throws SQLException {
+        Long id = ctx.pathParamAsClass("id", Long.class).get();
+        Url url = urlRepository.findById(id)
+                .orElseThrow(() -> new NotFoundResponse("Url not found"));
+
+        List<UrlCheck> checks = urlCheckRepository.findByUrlId(id);
+        ctx.render("urls/show.jte", Map.of(
+                "url", url,
+                "checks", checks
+        ));
     }
 
-    public void create(final Context ctx) {
+    public void create(Context ctx) throws SQLException {
         var input = ctx.formParam("url");
         if (input == null || input.isBlank()) {
             setFlashMessage(ctx, "URL cannot be empty", "danger");
@@ -50,10 +56,10 @@ public final class UrlsController {
         }
 
         try {
-            var parsedUrl = URI.create(input).toURL();
-            var normalizedUrl = parsedUrl.getProtocol() + "://" + parsedUrl.getAuthority();
+            URL parsedUrl = URI.create(input).toURL();
+            String normalizedUrl = parsedUrl.getProtocol() + "://" + parsedUrl.getAuthority();
 
-            var existingUrl = urlRepository.findByName(normalizedUrl);
+            Optional<Url> existingUrl = urlRepository.findByName(normalizedUrl);
 
             if (existingUrl.isPresent()) {
                 setFlashMessage(ctx, "Page already exists", "info");
@@ -62,16 +68,14 @@ public final class UrlsController {
                 urlRepository.save(url);
                 setFlashMessage(ctx, "Page successfully added", "success");
             }
+            ctx.redirect("/urls");
         } catch (MalformedURLException | IllegalArgumentException e) {
             setFlashMessage(ctx, "Invalid URL", "danger");
-        } catch (SQLException e) {
-            ctx.status(SERVER_ERROR_CODE).result("Server error: Failed to save URL");
-            return;
+            ctx.redirect("/");
         }
-        ctx.redirect("/");
     }
 
-    private void setFlashMessage(final Context ctx, final String message, final String type) {
+    private void setFlashMessage(Context ctx, String message, String type) {
         ctx.sessionAttribute("flash", message);
         ctx.sessionAttribute("flashType", type);
     }

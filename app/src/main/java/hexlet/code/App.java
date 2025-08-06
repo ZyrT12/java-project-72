@@ -6,19 +6,21 @@ import gg.jte.resolve.ResourceCodeResolver;
 import hexlet.code.controllers.UrlsController;
 import hexlet.code.controllers.UrlCheckController;
 import hexlet.code.db.DataBase;
-import hexlet.code.db.Migration;
 import hexlet.code.repository.UrlRepository;
 import hexlet.code.repository.UrlCheckRepository;
 import io.javalin.Javalin;
 import io.javalin.rendering.template.JavalinJte;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
 public final class App {
-
     private static final int INTERNAL_SERVER_ERROR = 500;
 
     private static int getPort() {
@@ -49,29 +51,28 @@ public final class App {
             Map<String, Object> model = new HashMap<>();
             model.put("flash", flash);
             model.put("flashType", flashType);
-
-            try {
-                ctx.render("index.jte", model);
-            } catch (Exception e) {
-                ctx.status(INTERNAL_SERVER_ERROR).result("Template rendering error: " + e.getMessage());
-                e.printStackTrace();
-            }
+            ctx.render("index.jte", model);
         });
 
-        var urlController = new UrlsController(urlRepository);
+        var urlController = new UrlsController(urlRepository, urlCheckRepository);
         var urlCheckController = new UrlCheckController(urlRepository, urlCheckRepository);
 
         app.get("/urls", urlController::index);
         app.get("/urls/{id}", urlController::show);
         app.post("/urls", urlController::create);
-        app.post("/urls/{id}", urlCheckController::check); // <--- добавлено
+        app.post("/urls/{id}/checks", urlCheckController::check);
 
         return app;
     }
 
-    public static void main(String[] args) throws Exception {
+    private static String readFixture(String fileName) throws IOException {
+        Path filePath = Paths.get("src", "test", "resources", "fixtures", fileName)
+                .toAbsolutePath().normalize();
+        return Files.readString(filePath).trim();
+    }
+
+    public static void main(String[] args) {
         DataBase.init();
-        Migration.run(DataBase.getDataSource());
 
         var app = getApp();
         app.start(getPort());

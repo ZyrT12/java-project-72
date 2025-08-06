@@ -1,6 +1,6 @@
 @import hexlet.code.model.Url
 @import java.util.List
-@import hexlet.code.util.FormatTimestamp
+@import hexlet.code.utils.FormatTimestamp
 @param List<Url> urls
 @param String flash
 @param String flashType

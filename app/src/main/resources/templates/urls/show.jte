@@ -1,7 +1,10 @@
 @import hexlet.code.model.Url
+@import hexlet.code.utils.FormatTimestamp
+
 @param Url url
 @param String flash
 @param String flashType
+
 
 <!DOCTYPE html>
 <html lang="ru">
@@ -39,7 +42,7 @@
                         <tr>
                             <td>${url.getId()}</td>
                             <td>${url.getName()}</td>
-                            <td>${url.getCreatedAt()}</td>
+                            <td>${FormatTimestamp.convert(url.getCreatedAt())}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -60,8 +63,7 @@
                         <th>Дата проверки</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <!-- Здесь будут выводиться проверки -->
+                <tbody>>
                 </tbody>
             </table>
         </div>
