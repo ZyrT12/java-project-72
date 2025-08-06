@@ -1,81 +1,84 @@
 package hexlet.code;
 
-import gg.jte.ContentType;
-import gg.jte.TemplateEngine;
-import gg.jte.resolve.ResourceCodeResolver;
-import hexlet.code.controllers.UrlsController;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import hexlet.code.controllers.RootController;
 import hexlet.code.controllers.UrlCheckController;
-import hexlet.code.db.DataBase;
-import hexlet.code.repository.UrlRepository;
-import hexlet.code.repository.UrlCheckRepository;
+import hexlet.code.controllers.UrlsController;
+import hexlet.code.repository.BaseRepository;
+import hexlet.code.utils.NamedRoutes;
+import hexlet.code.utils.TemplateResolve;
 import io.javalin.Javalin;
 import io.javalin.rendering.template.JavalinJte;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 public final class App {
-    private static final int INTERNAL_SERVER_ERROR = 500;
+    private static final String SQL_FILEPATH = "schema.sql";
 
     private static int getPort() {
         String port = System.getenv().getOrDefault("PORT", "7070");
         return Integer.parseInt(port);
     }
 
-    public static TemplateEngine createTemplateEngine() {
-        ClassLoader classLoader = App.class.getClassLoader();
-        ResourceCodeResolver codeResolver = new ResourceCodeResolver("templates", classLoader);
-        return TemplateEngine.create(codeResolver, ContentType.Html);
+    public static String readResourceFile(String filePath) throws IOException {
+        var inputStream = Optional.ofNullable(App.class.getClassLoader().getResourceAsStream(filePath));
+
+        if (inputStream.isEmpty()) {
+            throw new IOException();
+        }
+        var streamReader = new InputStreamReader(inputStream.get(), StandardCharsets.UTF_8);
+
+        try (BufferedReader reader = new BufferedReader(streamReader)) {
+            return reader.lines().collect(Collectors.joining("\n"));
+        }
     }
 
-    public static Javalin getApp() {
-        var dataSource = DataBase.getDataSource();
-        var urlRepository = new UrlRepository(dataSource);
-        var urlCheckRepository = new UrlCheckRepository(dataSource);
-
-        var app = Javalin.create(config -> {
-            config.bundledPlugins.enableDevLogging();
-            config.fileRenderer(new JavalinJte(createTemplateEngine()));
+    public static Javalin getApp() throws IOException, SQLException {
+        var app = Javalin.create(javalinConfig -> {
+            javalinConfig.bundledPlugins.enableDevLogging();
+            javalinConfig.fileRenderer(new JavalinJte(TemplateResolve.createTemplateEngine()));
+            javalinConfig.staticFiles.add("/static");
         });
 
-        app.get("/", ctx -> {
-            String flash = ctx.consumeSessionAttribute("flash");
-            String flashType = ctx.consumeSessionAttribute("flashType");
+        var hikariConfig = new HikariConfig();
+        hikariConfig.setJdbcUrl(getDBUrl());
 
-            Map<String, Object> model = new HashMap<>();
-            model.put("flash", flash);
-            model.put("flashType", flashType);
-            ctx.render("index.jte", model);
-        });
+        var dataSource = new HikariDataSource(hikariConfig);
+        var sql = readResourceFile(App.SQL_FILEPATH);
 
-        var urlController = new UrlsController(urlRepository, urlCheckRepository);
-        var urlCheckController = new UrlCheckController(urlRepository, urlCheckRepository);
+        log.info(sql);
+        try (var connection = dataSource.getConnection();
+             var statement = connection.createStatement()) {
+            statement.execute(sql);
+        }
 
-        app.get("/urls", urlController::index);
-        app.get("/urls/{id}", urlController::show);
-        app.post("/urls", urlController::create);
-        app.post("/urls/{id}/checks", urlCheckController::check);
+        BaseRepository.setDataSource(dataSource);
+
+        app.get(NamedRoutes.home(), RootController::home);
+        app.post(NamedRoutes.urls(), RootController::addUrl);
+        app.get(NamedRoutes.urls(), UrlsController::index);
+        app.get(NamedRoutes.urlPath("{id}"), UrlCheckController::show);
+        app.post(NamedRoutes.urlCheck("{id}"), UrlCheckController::check);
 
         return app;
     }
 
-    private static String readFixture(String fileName) throws IOException {
-        Path filePath = Paths.get("src", "test", "resources", "fixtures", fileName)
-                .toAbsolutePath().normalize();
-        return Files.readString(filePath).trim();
+    public static String getDBUrl() {
+        var dbUrl = "jdbc:h2:mem:project;DB_CLOSE_DELAY=-1;";
+        return System.getenv().getOrDefault("JDBC_DATABASE_URL", dbUrl);
     }
 
-    public static void main(String[] args) {
-        DataBase.init();
-
+    public static void main(String[] args) throws SQLException, IOException {
         var app = getApp();
         app.start(getPort());
-        log.info("App started on port {}", getPort());
     }
 }

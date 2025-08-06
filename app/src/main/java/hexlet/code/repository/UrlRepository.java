@@ -1,119 +1,106 @@
 package hexlet.code.repository;
 
 import hexlet.code.model.Url;
+import hexlet.code.model.UrlCheck;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Repository class for handling URL entities in database.
- * Provides CRUD operations for URLs.
- */
-public final class UrlRepository extends BaseRepository {
+public class UrlRepository extends BaseRepository {
 
-    /**
-     * Constructs new UrlRepository instance.
-     * @param dataSource DataSource for database connections
-     */
-    public UrlRepository(final DataSource dataSource) {
-        super(dataSource);
-    }
-
-    /**
-     * Saves URL entity to database.
-     * @param url URL to save
-     * @throws SQLException if database error occurs
-     */
-    public void save(final Url url) throws SQLException {
-        final String sql = "INSERT INTO urls (name, created_at) VALUES (?, ?)";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setString(1, url.getName());
-            stmt.setTimestamp(2, url.getCreatedAt());
-            stmt.executeUpdate();
-
-            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    url.setId(generatedKeys.getLong(1));
-                }
-            }
+    public static void save(Url url) throws SQLException {
+        String sql = "INSERT INTO urls (name, created_at) VALUES (?, ?)";
+        var datetime = new Timestamp(System.currentTimeMillis());
+        try (var conn = BaseRepository.getDataSource().getConnection();
+             var preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, url.getName());
+            preparedStatement.setTimestamp(2, datetime);
+            preparedStatement.executeUpdate();
         }
     }
 
-    /**
-     * Finds URL by its ID.
-     * @param id ID of URL to find
-     * @return Optional containing URL if found
-     * @throws SQLException if database error occurs
-     */
-    public Optional<Url> findById(final Long id) throws SQLException {
-        final String sql = "SELECT * FROM urls WHERE id = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+    public static Optional<Url> findById(Long id) throws SQLException {
+        String sql = "SELECT id, name, created_at FROM urls WHERE id = ?";
+        try (var conn = BaseRepository.getDataSource().getConnection();
+             var stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(new Url(
-                            rs.getLong("id"),
-                            rs.getString("name"),
-                            rs.getTimestamp("created_at")
-                    ));
-                }
-                return Optional.empty();
+            var resultSet = stmt.executeQuery();
+
+            if (resultSet.next()) {
+                var idd = resultSet.getLong(1);
+                var name = resultSet.getString(2);
+                var createdAt = resultSet.getTimestamp(3);
+                var url = new Url(name);
+                url.setId(idd);
+                url.setCreatedAt(createdAt);
+
+                return Optional.of(url);
             }
+            return Optional.empty();
         }
     }
 
-    /**
-     * Retrieves all URLs from database ordered by ID descending.
-     * @return List of all URLs
-     * @throws SQLException if database error occurs
-     */
-    public List<Url> findAll() throws SQLException {
-        final String sql = "SELECT * FROM urls ORDER BY id DESC";
-        final List<Url> urls = new ArrayList<>();
-        try (Connection conn = getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                urls.add(new Url(
-                        rs.getLong("id"),
-                        rs.getString("name"),
-                        rs.getTimestamp("created_at")
-                ));
+    public static boolean isExist(String name) throws SQLException {
+        String sql = "SELECT id FROM urls WHERE name = ?";
+        try (var conn = BaseRepository.getDataSource().getConnection();
+             var stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, name);
+            var resultSet = stmt.executeQuery();
+
+            return resultSet.next();
+        }
+    }
+
+    public static List<Url> getEntities() throws SQLException {
+        var sql = "SELECT id, name FROM urls ORDER BY id";
+        try (var conn = BaseRepository.getDataSource().getConnection();
+             var stmt = conn.prepareStatement(sql)) {
+            var resultSet = stmt.executeQuery();
+            var result = new ArrayList<Url>();
+            while (resultSet.next()) {
+                var id = resultSet.getLong("id");
+                var name = resultSet.getString("name");
+                var url = new Url(name);
+                url.setId(id);
+                result.add(url);
+            }
+            return result;
+        }
+    }
+
+    public static List<Url> getUrlsAndLastCheck() throws SQLException {
+        var sql = "SELECT DISTINCT ON (urls.id)"
+                + " urls.id AS url_id,"
+                + " urls.name AS name,"
+                + " url_checks.status_code AS status_code,"
+                + " url_checks.created_at AS created_at"
+                + " FROM urls"
+                + " LEFT JOIN url_checks ON urls.id = url_checks.url_id;";
+
+        var urls = new ArrayList<Url>();
+
+        try (var conn = BaseRepository.getDataSource().getConnection();
+             var stmt = conn.prepareStatement(sql)) {
+            var resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                var urlId = resultSet.getLong("url_id");
+                var name = resultSet.getString("name");
+                var statusCode = resultSet.getInt("status_code");
+                var createdAt = resultSet.getTimestamp("created_at");
+                var url = new Url(name);
+                url.setId(urlId);
+
+                if (statusCode != 0) {
+                    var urlCheck = new UrlCheck();
+                    urlCheck.setStatus(statusCode);
+                    urlCheck.setCreatedAt(createdAt);
+                    url.setLastCheck(urlCheck);
+                }
+                urls.add(url);
             }
         }
         return urls;
-    }
-
-    /**
-     * Finds URL by its name (normalized URL).
-     * @param name Normalized URL name to search for
-     * @return Optional containing URL if found
-     * @throws SQLException if database error occurs
-     */
-    public Optional<Url> findByName(final String name) throws SQLException {
-        final String sql = "SELECT * FROM urls WHERE name = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, name);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(new Url(
-                            rs.getLong("id"),
-                            rs.getString("name"),
-                            rs.getTimestamp("created_at")
-                    ));
-                }
-                return Optional.empty();
-            }
-        }
     }
 }

@@ -1,58 +1,66 @@
 package hexlet.code.controllers;
 
-import hexlet.code.model.Url;
+import hexlet.code.dto.UrlChecksPage;
 import hexlet.code.model.UrlCheck;
-import hexlet.code.repository.UrlRepository;
 import hexlet.code.repository.UrlCheckRepository;
+import hexlet.code.repository.UrlRepository;
+import hexlet.code.utils.NamedRoutes;
 import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
+import kong.unirest.HttpResponse;
+import kong.unirest.Unirest;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-import java.io.IOException;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 
-public final class UrlCheckController {
-    private final UrlRepository urlRepository;
-    private final UrlCheckRepository urlCheckRepository;
+@Slf4j
+public class UrlCheckController {
+    private static final int ERROR_CLIENT = 400;
 
-    public UrlCheckController(UrlRepository urlRepository, UrlCheckRepository urlCheckRepository) {
-        this.urlRepository = urlRepository;
-        this.urlCheckRepository = urlCheckRepository;
-    }
-
-    public void check(Context ctx) throws SQLException {
-        long id = ctx.pathParamAsClass("id", Long.class).get();
-
-        Url url = urlRepository.findById(id)
-                .orElseThrow(() -> new NotFoundResponse("URL not found"));
+    public static void check(Context ctx) throws SQLException {
+        var id = ctx.pathParamAsClass("id", Long.class).get();
+        var url = UrlRepository.findById(id)
+                .orElseThrow(() -> new NotFoundResponse(String.format("Url with id = %d not found", id)));
 
         try {
-            Document document = Jsoup.connect(url.getName()).get();
-            int statusCode = 200;
-            String title = document.title();
-            String h1 = document.selectFirst("h1") != null ? document.selectFirst("h1").text() : "";
-            String description = document.selectFirst("meta[name=description]") != null
-                    ? document.selectFirst("meta[name=description]").attr("content") : "";
+            HttpResponse<String> response = Unirest.get(url.getName()).asString();
+            Document doc = Jsoup.parse(response.getBody());
 
-            UrlCheck check = new UrlCheck(
-                    url.getId(),
-                    statusCode,
+            var title = doc.title();
+            var h1Element = doc.selectFirst("h1");
+            var descriptionElement = doc.selectFirst("meta[name=description]");
+
+            var urlCheck = new UrlCheck(
+                    url,
                     title,
-                    h1,
-                    description,
-                    LocalDateTime.now()
+                    h1Element != null ? h1Element.text() : "",
+                    descriptionElement != null ? descriptionElement.attr("content") : ""
             );
-            urlCheckRepository.save(check);
 
-            ctx.sessionAttribute("flash", "Проверка прошла успешно");
-            ctx.sessionAttribute("flashType", "success");
-        } catch (IOException e) {
-            ctx.sessionAttribute("flash", "Проверка не удалась: " + e.getMessage());
-            ctx.sessionAttribute("flashType", "danger");
+            urlCheck.setStatus(response.getStatus());
+            UrlCheckRepository.save(urlCheck, url);
+
+            ctx.redirect(NamedRoutes.urlPath(String.valueOf(id)));
+        } catch (Exception e) {
+            log.error("Error during URL check: {}", e.getMessage());
+            var page = new UrlChecksPage(url, List.of());
+            page.setFlash("Некорректный адрес");
+            page.setFlashType("danger");
+            ctx.status(ERROR_CLIENT);
+            ctx.render("urls/show.jte", Collections.singletonMap("page", page));
         }
+    }
 
-        ctx.redirect("/urls/" + id);
+    public static void show(Context ctx) throws SQLException {
+        var id = ctx.pathParamAsClass("id", Long.class).get();
+        var url = UrlRepository.findById(id)
+                .orElseThrow(() -> new NotFoundResponse(String.format("Url with id = %d not found", id)));
+
+        var page = new UrlChecksPage(url, UrlCheckRepository.getEntitiesByUrl(url));
+        ctx.render("urls/show.jte", Collections.singletonMap("page", page));
     }
 }
