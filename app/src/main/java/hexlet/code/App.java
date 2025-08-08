@@ -42,10 +42,8 @@ public final class App {
         var app = Javalin.create(config -> {
             config.bundledPlugins.enableDevLogging();
             config.fileRenderer(new JavalinJte(TemplateResolve.createTemplateEngine()));
-            // Убираем стандартную конфигурацию static files
         });
 
-        // Добавляем обработчик для CSS
         app.get("/style.css", ctx -> {
             ctx.contentType("text/css");
             InputStream cssStream = App.class.getResourceAsStream("/templates/style.css");

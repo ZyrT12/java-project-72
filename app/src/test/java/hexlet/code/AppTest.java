@@ -1,8 +1,5 @@
 package hexlet.code;
 
-import hexlet.code.model.Url;
-import hexlet.code.repository.UrlCheckRepository;
-import hexlet.code.repository.UrlRepository;
 import hexlet.code.utils.NamedRoutes;
 import io.javalin.Javalin;
 import io.javalin.testtools.JavalinTest;
@@ -15,8 +12,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -80,11 +75,9 @@ public class AppTest {
     @Test
     void testShowUrlPage() {
         JavalinTest.test(app, (server, client) -> {
-            // Сначала создаем URL
             var response = client.post("/urls", "url=https://example.com");
             assertThat(response.code()).isEqualTo(200);
 
-            // Затем проверяем его страницу с валидным ID
             var showResponse = client.get("/urls/1");
             assertThat(showResponse.code()).isEqualTo(200);
         });
