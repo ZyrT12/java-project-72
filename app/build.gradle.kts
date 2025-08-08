@@ -8,28 +8,19 @@ plugins {
     id("com.github.ben-manes.versions") version "0.52.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.sonarqube") version "6.2.0.5505"
-}
-
-sonar {
-    properties {
-        property("sonar.projectKey", "ZyrT12_java-project-72")
-        property("sonar.organization", "zyrt12")
-        property("sonar.host.url", "https://sonarcloud.io")
-    }
-}
-
-application {
-    mainClass.set("hexlet.code.App")
+    jacoco
 }
 
 group = "hexlet.code"
 version = "1.0-SNAPSHOT"
 
+application {
+    mainClass.set("hexlet.code.App")
+}
+
 repositories {
     mavenCentral()
 }
-
-
 
 dependencies {
     implementation("com.h2database:h2:2.3.232")
@@ -51,6 +42,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.12.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
     checkstyle("com.puppycrawl.tools:checkstyle:10.12.5")
 }
 
@@ -67,31 +59,67 @@ tasks.shadowJar {
     }
 }
 
-tasks.test {
-    useJUnitPlatform()
-    // https://technology.lastminute.com/junit5-kotlin-and-gradle-dsl/
-    testLogging {
-        exceptionFormat = TestExceptionFormat.FULL
-        events = mutableSetOf(TestLogEvent.FAILED, TestLogEvent.PASSED, TestLogEvent.SKIPPED)
-        // showStackTraces = true
-        // showCauses = true
-        showStandardStreams = true
-    }
-}
-
-tasks {
-    processTestResources {
-        duplicatesStrategy = DuplicatesStrategy.INCLUDE
-        from("src/test/resources") {
-            include("**/*.sql", "**/*.html")
-        }
-    }
-}
-
 sourceSets {
     test {
         resources {
             srcDirs("src/test/resources", "src/main/resources")
         }
     }
+}
+
+tasks.processTestResources {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    from("src/test/resources") {
+        include("**/*.sql", "**/*.html")
+    }
+}
+
+tasks.test {
+    useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport) // после тестов
+    testLogging {
+        exceptionFormat = TestExceptionFormat.FULL
+        events = setOf(TestLogEvent.FAILED, TestLogEvent.PASSED, TestLogEvent.SKIPPED)
+        showStandardStreams = true
+    }
+    reports {
+        junitXml.required.set(true) // убедимся, что XML точно есть
+        html.required.set(true)
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+    classDirectories.setFrom(files("build/classes/java/main"))
+    sourceDirectories.setFrom(files("src/main/java"))
+    executionData.setFrom(fileTree(buildDir).include("jacoco/test.exec"))
+}
+
+sonar {
+    properties {
+        property("sonar.projectKey", "ZyrT12_java-project-72")
+        property("sonar.organization", "zyrt12")
+        property("sonar.host.url", "https://sonarcloud.io")
+
+        property("sonar.sources", "src/main/java")
+        property("sonar.tests", "src/test/java")
+        property("sonar.java.binaries", "build/classes/java/main")
+        property("sonar.java.test.binaries", "build/classes/java/test")
+
+        property("sonar.junit.reportPaths", "build/test-results/test")
+        property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
+    }
+}
+
+tasks.sonar {
+    dependsOn(tasks.jacocoTestReport)
 }

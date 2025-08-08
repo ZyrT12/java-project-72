@@ -1,16 +1,15 @@
 package hexlet.code;
 
 import hexlet.code.model.Url;
+import hexlet.code.repository.BaseRepository;
+import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
 import hexlet.code.utils.NamedRoutes;
 import io.javalin.Javalin;
 import io.javalin.testtools.JavalinTest;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -19,33 +18,22 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Test class for {@link App} application.
- * Contains integration tests for URL checking functionality.
- */
 public class AppTest {
+
     private Javalin app;
     private static MockWebServer mockServer;
 
-    /**
-     * Starts mock web server before all tests.
-     *
-     * @throws IOException if mock server fails to start
-     */
     @BeforeAll
     public static void mockStart() throws IOException {
         mockServer = new MockWebServer();
-        var mockResponse = new MockResponse()
-                .setBody("<html><head><title>Test page</title></head><body>Test content</body></html>");
-        mockServer.enqueue(mockResponse);
+        mockServer.enqueue(new MockResponse()
+                .setBody("<html><head><title>Test page</title>"
+                        + "<meta name=\"description\" content=\"Test desc\">"
+                        + "</head><body><h1>Test H1</h1></body></html>")
+                .setResponseCode(200));
         mockServer.start();
     }
 
-    /**
-     * Shuts down mock web server after all tests.
-     *
-     * @throws IOException if mock server fails to shutdown
-     */
     @AfterAll
     public static void mockStop() throws IOException {
         mockServer.shutdown();
@@ -62,9 +50,6 @@ public class AppTest {
         app = App.getApp();
     }
 
-    /**
-     * Tests that main page is accessible.
-     */
     @Test
     public void testMainPage() {
         JavalinTest.test(app, (server, client) -> {
@@ -73,9 +58,6 @@ public class AppTest {
         });
     }
 
-    /**
-     * Tests that URLs page is accessible when no URLs are present.
-     */
     @Test
     public void testUrlsEmptyPage() {
         JavalinTest.test(app, (server, client) -> {
@@ -84,9 +66,6 @@ public class AppTest {
         });
     }
 
-    /**
-     * Tests that valid URL can be added successfully.
-     */
     @Test
     public void testAddValidUrl() {
         JavalinTest.test(app, (server, client) -> {
@@ -96,9 +75,6 @@ public class AppTest {
         });
     }
 
-    /**
-     * Tests that invalid URL returns error response.
-     */
     @Test
     public void testAddInvalidUrl() {
         JavalinTest.test(app, (server, client) -> {
@@ -108,11 +84,6 @@ public class AppTest {
         });
     }
 
-    /**
-     * Tests that URL page shows details of specific URL.
-     *
-     * @throws SQLException if database operation fails
-     */
     @Test
     void testShowUrlPage() throws SQLException {
         JavalinTest.test(app, (server, client) -> {
@@ -128,11 +99,6 @@ public class AppTest {
         });
     }
 
-    /**
-     * Tests that URL checking functionality works correctly.
-     *
-     * @throws SQLException if database operation fails
-     */
     @Test
     void testCheckUrl() throws SQLException {
         JavalinTest.test(app, (server, client) -> {
@@ -155,15 +121,114 @@ public class AppTest {
         });
     }
 
-    /**
-     * Tests that CSS file is available and has correct content type.
-     */
     @Test
-    public void testCssIsAvailable() {
+    public void testCssIsAvailable() throws IOException {
         JavalinTest.test(app, (server, client) -> {
             var response = client.get("/style.css");
             assertThat(response.code()).isEqualTo(200);
             assertThat(response.header("Content-Type")).isEqualTo("text/css");
+            // Дополнительно проверим, что тело не пустое — это добавит покрытие ветки чтения ресурса
+            var body = response.body().string();
+            assertThat(body).isNotBlank();
         });
+    }
+
+
+    @Test
+    void showUrl_notFound_returns404() {
+        JavalinTest.test(app, (server, client) -> {
+            var resp = client.get("/urls/999999");
+            assertThat(resp.code()).isEqualTo(404);
+        });
+    }
+
+    @Test
+    void addEmptyUrl_returns400_andNoInsert() throws Exception {
+        JavalinTest.test(app, (server, client) -> {
+            var before = UrlRepository.getEntities().size();
+            var resp = client.post(NamedRoutes.urls(), "url=");
+            assertThat(resp.code()).isEqualTo(400);
+            var after = UrlRepository.getEntities().size();
+            assertThat(after).isEqualTo(before);
+        });
+    }
+
+    @Test
+    void addDuplicateUrl_notInsertedTwice() throws Exception {
+        JavalinTest.test(app, (server, client) -> {
+            var u = "https://ru.hexlet.io";
+            var r1 = client.post(NamedRoutes.urls(), "url=" + u);
+            var r2 = client.post(NamedRoutes.urls(), "url=" + u);
+
+            assertThat(r1.code()).isEqualTo(200);
+            // Вторая попытка может вернуть 200 с сообщением «уже существует» или 409 — учитываем оба варианта
+            assertThat(r2.code()).isIn(200, 409);
+
+            long count = UrlRepository.getEntities()
+                    .stream()
+                    .filter(x -> x.getName().equals(u))
+                    .count();
+            assertThat(count).isEqualTo(1);
+        });
+    }
+
+    @Test
+    void datasource_isConfigured() {
+        assertThat(BaseRepository.getDataSource()).isNotNull();
+    }
+
+    @Test
+    void repo_findById_notFound_and_isExist_false() throws Exception {
+        // Сначала создаём одну запись
+        Url u = new Url("https://repo.test/one");
+        UrlRepository.save(u);
+
+        assertThat(UrlRepository.isExist("https://repo.test/one")).isTrue();
+        assertThat(UrlRepository.isExist("https://repo.test/missing")).isFalse();
+
+        long existingId = UrlRepository.getEntities().stream()
+                .filter(x -> x.getName().equals("https://repo.test/one"))
+                .findFirst().orElseThrow().getId();
+        assertThat(UrlRepository.findById(existingId)).isPresent();
+
+        assertThat(UrlRepository.findById(9_999_999L)).isEmpty();
+    }
+
+    @Test
+    void repo_getEntitiesByUrl_readsAllFields() throws Exception {
+        // 1) Создаём URL
+        var url = new hexlet.code.model.Url("https://repo.fields");
+        UrlRepository.save(url);
+        var saved = UrlRepository.getEntities().stream()
+                .filter(u -> u.getName().equals("https://repo.fields"))
+                .findFirst().orElseThrow();
+        saved.setId(saved.getId());
+
+        var check = new hexlet.code.model.UrlCheck(saved, "Title X", "H1 X", "Desc X");
+        check.setStatusCode(201);
+        UrlCheckRepository.save(check, saved);
+
+        var checks = UrlCheckRepository.getEntitiesByUrl(saved);
+        assertThat(checks).hasSize(1);
+        var c = checks.get(0);
+
+        assertThat(c.getId()).isNotNull();
+        assertThat(c.getStatusCode()).isEqualTo(201);
+        assertThat(c.getTitle()).isEqualTo("Title X");
+        assertThat(c.getH1()).isEqualTo("H1 X");
+        assertThat(c.getDescription()).isEqualTo("Desc X");
+        assertThat(c.getCreatedAt()).isNotNull();
+    }
+
+    @Test
+    void repo_getUrlsAndLastCheck_reachesReturn() throws Exception {
+        
+        var url = new hexlet.code.model.Url("https://return.branch");
+        UrlRepository.save(url);
+
+        var result = UrlRepository.getUrlsAndLastCheck();
+
+        assertThat(result).isNotNull();
+        assertThat(result).anyMatch(u -> u.getName().equals("https://return.branch"));
     }
 }
