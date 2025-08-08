@@ -1,6 +1,5 @@
 package hexlet.code.controllers;
 
-import hexlet.code.model.Url;
 import hexlet.code.repository.UrlRepository;
 import io.javalin.http.Context;
 

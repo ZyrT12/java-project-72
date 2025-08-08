@@ -51,6 +51,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.12.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    checkstyle("com.puppycrawl.tools:checkstyle:10.12.5")
 }
 
 tasks.shadowJar {
