@@ -41,7 +41,7 @@ public class UrlCheckController {
                     descriptionElement != null ? descriptionElement.attr("content") : ""
             );
 
-            urlCheck.setStatus(response.getStatus());
+            urlCheck.setStatusCode(response.getStatus());
             UrlCheckRepository.save(urlCheck, url);
 
             ctx.redirect(NamedRoutes.urlPath(String.valueOf(id)));

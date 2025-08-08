@@ -16,6 +16,6 @@ public class UrlCheck {
     private final String h1;
     private final String description;
     private Long id;
-    private int status;
+    private Integer statusCode;
     private Timestamp createdAt;
 }

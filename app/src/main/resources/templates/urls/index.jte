@@ -5,8 +5,6 @@
 @param String flash
 @param String flashType
 
-
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -15,52 +13,68 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="min-vh-100 d-flex flex-column">
-    <header class="flex-shrink-0">
-        <nav class="navbar navbar-expand-md navbar-dark bg-dark px-3">
-            <a class="navbar-brand" href="/">Анализатор страниц</a>
-            <a class="nav-link" href="/urls">Сайты</a>
-        </nav>
-    </header>
+<header class="flex-shrink-0">
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark px-3">
+        <a class="navbar-brand" href="/">Анализатор страниц</a>
+        <a class="nav-link" href="/urls">Сайты</a>
+    </nav>
+</header>
 
-    <main class="flex-grow-1">
-        <div class="container-lg mt-3">
-            <h1>Список сайтов</h1>
+<main class="flex-grow-1">
+    <div class="container-lg mt-3">
+        <h1>Список сайтов</h1>
 
-            @if (flash != null)
-                <div class="alert alert-${flashType}">${flash}</div>
-            @endif
+        @if (flash != null)
+            <div class="alert alert-${flashType}">${flash}</div>
+        @endif
 
-            <table class="table table-bordered table-hover">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Сайт</th>
-                        <th>Дата создания</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @for (var url : urls)
+        <table class="table table-bordered table-hover">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Сайт</th>
+                <th>Дата создания</th>
+                <th>Последняя проверка</th>
+                <th>Код ответа</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (urls != null && !urls.isEmpty())
+                @for (Url url : urls)
                     <tr>
                         <td>${url.getId()}</td>
                         <td>
                             <a href="/urls/${url.getId()}">${url.getName()}</a>
                         </td>
-                        <td>${FormatTimestamp.convert(url.getCreatedAt())}
+                        <td>${FormatTimestamp.convert(url.getCreatedAt())}</td>
+                        <td>
+                            @if (url.getLastCheck() != null)
+                                ${FormatTimestamp.convert(url.getLastCheck().getCreatedAt())}
+                            @endif
+                        </td>
+                        <td>
+                            @if (url.getLastCheck() != null)
+                                ${url.getLastCheck().getStatusCode()}
+                            @endif
                         </td>
                     </tr>
                 @endfor
+            @else
+                <tr>
+                    <td colspan="5" class="text-center">Нет добавленных сайтов</td>
+                </tr>
+            @endif
+            </tbody>
+        </table>
+    </div>
+</main>
 
-                </tbody>
-            </table>
+<footer class="border-top py-3 mt-5 flex-shrink-0">
+    <div class="container-lg">
+        <div class="text-center">
+            <a href="https://hexlet.io" target="_blank">Hexlet</a>
         </div>
-    </main>
-
-    <footer class="border-top py-3 mt-5 flex-shrink-0">
-        <div class="container-lg">
-            <div class="text-center">
-                <a href="https://hexlet.io" target="_blank">Hexlet</a>
-            </div>
-        </div>
-    </footer>
+    </div>
+</footer>
 </body>
 </html>

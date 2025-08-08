@@ -17,7 +17,7 @@ public class UrlCheckRepository extends BaseRepository {
         try (var conn = BaseRepository.getDataSource().getConnection();
              var preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setLong(1, url.getId());
-            preparedStatement.setInt(2, urlCheck.getStatus());
+            preparedStatement.setInt(2, urlCheck.getStatusCode());
             preparedStatement.setString(3, urlCheck.getTitle());
             preparedStatement.setString(4, urlCheck.getH1());
             preparedStatement.setString(5, urlCheck.getDescription());
@@ -44,7 +44,7 @@ public class UrlCheckRepository extends BaseRepository {
                 );
                 urlCheck.setId(resultSet.getLong("id"));
                 urlCheck.setCreatedAt(resultSet.getTimestamp("created_at"));
-                urlCheck.setStatus(resultSet.getInt("status_code"));
+                urlCheck.setStatusCode(resultSet.getInt("status_code"));
                 urlChecks.add(urlCheck);
             }
             return urlChecks;

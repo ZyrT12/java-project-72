@@ -14,55 +14,61 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
 public final class App {
-    private static final String SQL_FILEPATH = "schema.sql";
+    private static final String DEFAULT_PORT = "7070";
+    private static final String DEFAULT_DB_URL = "jdbc:h2:mem:project;DB_CLOSE_DELAY=-1";
 
     private static int getPort() {
-        String port = System.getenv().getOrDefault("PORT", "7070");
+        String port = System.getenv().getOrDefault("PORT", DEFAULT_PORT);
         return Integer.parseInt(port);
     }
 
     public static String readResourceFile(String filePath) throws IOException {
-        var inputStream = Optional.ofNullable(App.class.getClassLoader().getResourceAsStream(filePath));
-
-        if (inputStream.isEmpty()) {
-            throw new IOException();
-        }
-        var streamReader = new InputStreamReader(inputStream.get(), StandardCharsets.UTF_8);
-
-        try (BufferedReader reader = new BufferedReader(streamReader)) {
+        try (InputStream inputStream = App.class.getClassLoader().getResourceAsStream(filePath);
+             BufferedReader reader = new BufferedReader(
+                     new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
             return reader.lines().collect(Collectors.joining("\n"));
         }
     }
 
     public static Javalin getApp() throws IOException, SQLException {
-        var app = Javalin.create(javalinConfig -> {
-            javalinConfig.bundledPlugins.enableDevLogging();
-            javalinConfig.fileRenderer(new JavalinJte(TemplateResolve.createTemplateEngine()));
-            javalinConfig.staticFiles.add("/static");
+        var app = Javalin.create(config -> {
+            config.bundledPlugins.enableDevLogging();
+            config.fileRenderer(new JavalinJte(TemplateResolve.createTemplateEngine()));
+            // Убираем стандартную конфигурацию static files
+        });
+
+        // Добавляем обработчик для CSS
+        app.get("/style.css", ctx -> {
+            ctx.contentType("text/css");
+            InputStream cssStream = App.class.getResourceAsStream("/templates/style.css");
+            if (cssStream != null) {
+                ctx.result(cssStream);
+            } else {
+                ctx.status(404).result("CSS file not found");
+            }
         });
 
         var hikariConfig = new HikariConfig();
         hikariConfig.setJdbcUrl(getDBUrl());
-
         var dataSource = new HikariDataSource(hikariConfig);
-        var sql = readResourceFile(App.SQL_FILEPATH);
 
-        log.info(sql);
         try (var connection = dataSource.getConnection();
              var statement = connection.createStatement()) {
+            var sql = readResourceFile("db/schema.sql");
             statement.execute(sql);
         }
 
         BaseRepository.setDataSource(dataSource);
 
+        // Регистрируем маршруты
         app.get(NamedRoutes.home(), RootController::home);
         app.post(NamedRoutes.urls(), RootController::addUrl);
         app.get(NamedRoutes.urls(), UrlsController::index);
@@ -73,8 +79,7 @@ public final class App {
     }
 
     public static String getDBUrl() {
-        var dbUrl = "jdbc:h2:mem:project;DB_CLOSE_DELAY=-1;";
-        return System.getenv().getOrDefault("JDBC_DATABASE_URL", dbUrl);
+        return System.getenv().getOrDefault("JDBC_DATABASE_URL", DEFAULT_DB_URL);
     }
 
     public static void main(String[] args) throws SQLException, IOException {

@@ -79,11 +79,11 @@ tasks.test {
 }
 
 tasks {
-    processResources {
-        duplicatesStrategy = DuplicatesStrategy.WARN
-    }
     processTestResources {
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        from("src/test/resources") {
+            include("**/*.sql", "**/*.html")
+        }
     }
 }
 

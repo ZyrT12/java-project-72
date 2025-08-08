@@ -94,7 +94,7 @@ public class UrlRepository extends BaseRepository {
 
                 if (statusCode != 0) {
                     var urlCheck = new UrlCheck();
-                    urlCheck.setStatus(statusCode);
+                    urlCheck.setStatusCode(statusCode);
                     urlCheck.setCreatedAt(createdAt);
                     url.setLastCheck(urlCheck);
                 }
