@@ -1,5 +1,7 @@
 package hexlet.code;
 
+import hexlet.code.model.Url;
+import hexlet.code.repository.UrlRepository;
 import hexlet.code.utils.NamedRoutes;
 import io.javalin.Javalin;
 import io.javalin.testtools.JavalinTest;
@@ -12,6 +14,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -73,25 +77,46 @@ public class AppTest {
     }
 
     @Test
-    void testShowUrlPage() {
+    void testShowUrlPage() throws SQLException {
         JavalinTest.test(app, (server, client) -> {
+            // 1. Создаем URL
             var response = client.post("/urls", "url=https://example.com");
             assertThat(response.code()).isEqualTo(200);
 
-            var showResponse = client.get("/urls/1");
+            // 2. Получаем ID из базы
+            List<Url> urls = UrlRepository.getEntities();
+            assertThat(urls).isNotEmpty();
+            long id = urls.get(0).getId();
+
+            // 3. Запрашиваем страницу
+            var showResponse = client.get("/urls/" + id);
             assertThat(showResponse.code()).isEqualTo(200);
         });
     }
 
+
     @Test
-    void testCheckUrl() {
+    void testCheckUrl() throws SQLException {
         JavalinTest.test(app, (server, client) -> {
-            var response = client.post("/urls", "url=https://example.com");
-            assertThat(response.code()).isEqualTo(200);
+            // 1. Создаем URL
+            var testUrl = "https://example.com";
+            var addResponse = client.post("/urls", "url=" + testUrl);
+            assertThat(addResponse.code()).isEqualTo(200);
 
-            Thread.sleep(10000);
+            // 2. Получаем ID через getEntities()
+            List<Url> urls = UrlRepository.getEntities();
+            assertThat(urls).isNotEmpty();
 
-            var checkResponse = client.post("/urls/1/checks");
+            // Находим URL по имени
+            Optional<Url> createdUrl = urls.stream()
+                    .filter(u -> u.getName().equals(testUrl))
+                    .findFirst();
+
+            assertThat(createdUrl).isPresent();
+            long id = createdUrl.get().getId();
+
+            // 3. Выполняем проверку
+            var checkResponse = client.post("/urls/" + id + "/checks");
             assertThat(checkResponse.code()).isEqualTo(200);
         });
     }

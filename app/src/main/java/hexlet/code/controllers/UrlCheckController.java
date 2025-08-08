@@ -1,6 +1,7 @@
 package hexlet.code.controllers;
 
 import hexlet.code.dto.UrlChecksPage;
+import hexlet.code.model.Url;
 import hexlet.code.model.UrlCheck;
 import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
@@ -16,6 +17,8 @@ import org.jsoup.nodes.Document;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 public class UrlCheckController {
@@ -56,11 +59,25 @@ public class UrlCheckController {
     }
 
     public static void show(Context ctx) throws SQLException {
-        var id = ctx.pathParamAsClass("id", Long.class).get();
-        var url = UrlRepository.findById(id)
-                .orElseThrow(() -> new NotFoundResponse(String.format("Url with id = %d not found", id)));
+        var id = ctx.pathParam("id");
+        log.info("Showing URL with id: {}", id);
 
-        var page = new UrlChecksPage(url, UrlCheckRepository.getEntitiesByUrl(url));
-        ctx.render("urls/show.jte", Collections.singletonMap("page", page));
+        try {
+            long urlId = Long.parseLong(id);
+            Optional<Url> urlOptional = UrlRepository.findById(urlId);
+
+            if (urlOptional.isEmpty()) {
+                log.warn("URL with id {} not found", urlId);
+                ctx.status(404).result("URL not found");
+                return;
+            }
+
+            Url url = urlOptional.get();
+            log.debug("Found URL: {}", url.getName());
+            ctx.render("urls/show.jte", Map.of("url", url));
+        } catch (NumberFormatException e) {
+            log.error("Invalid URL ID format: {}", id, e);
+            ctx.status(400).result("Invalid URL ID format");
+        }
     }
 }

@@ -38,7 +38,11 @@ public final class App {
         }
     }
 
+
     public static Javalin getApp() throws IOException, SQLException {
+
+        log.info("Starting application initialization");
+
         var app = Javalin.create(config -> {
             config.bundledPlugins.enableDevLogging();
             config.fileRenderer(new JavalinJte(TemplateResolve.createTemplateEngine()));
@@ -56,12 +60,18 @@ public final class App {
 
         var hikariConfig = new HikariConfig();
         hikariConfig.setJdbcUrl(getDBUrl());
+        log.debug("Database URL: {}", hikariConfig.getJdbcUrl());
         var dataSource = new HikariDataSource(hikariConfig);
 
         try (var connection = dataSource.getConnection();
              var statement = connection.createStatement()) {
+            log.info("Executing database schema initialization");
             var sql = readResourceFile("db/schema.sql");
             statement.execute(sql);
+            log.info("Database initialized successfully");
+        } catch (SQLException e) {
+            log.error("Database initialization failed", e);
+            throw e;
         }
 
         BaseRepository.setDataSource(dataSource);
@@ -72,6 +82,21 @@ public final class App {
         app.get(NamedRoutes.urls(), UrlsController::index);
         app.get(NamedRoutes.urlPath("{id}"), UrlCheckController::show);
         app.post(NamedRoutes.urlCheck("{id}"), UrlCheckController::check);
+
+        app.before(ctx -> {
+            log.info("Request: {} {} | Body: {}", ctx.method(), ctx.path(), ctx.body());
+        });
+
+        app.after(ctx -> {
+            log.info("Response: {} | Status: {}", ctx.path(), ctx.status());
+        });
+
+        app.exception(Exception.class, (e, ctx) -> {
+            log.error("Unhandled exception", e);
+            ctx.status(500);
+        });
+
+        log.info("Application initialized successfully");
 
         return app;
     }
