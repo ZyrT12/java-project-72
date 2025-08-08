@@ -19,10 +19,19 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Test class for {@link App} application.
+ * Contains integration tests for URL checking functionality.
+ */
 public class AppTest {
     private Javalin app;
     private static MockWebServer mockServer;
 
+    /**
+     * Starts mock web server before all tests.
+     *
+     * @throws IOException if mock server fails to start
+     */
     @BeforeAll
     public static void mockStart() throws IOException {
         mockServer = new MockWebServer();
@@ -32,16 +41,30 @@ public class AppTest {
         mockServer.start();
     }
 
+    /**
+     * Shuts down mock web server after all tests.
+     *
+     * @throws IOException if mock server fails to shutdown
+     */
     @AfterAll
     public static void mockStop() throws IOException {
         mockServer.shutdown();
     }
 
+    /**
+     * Initializes Javalin application before each test.
+     *
+     * @throws SQLException if database initialization fails
+     * @throws IOException if resource files cannot be read
+     */
     @BeforeEach
     public void setUp() throws SQLException, IOException {
         app = App.getApp();
     }
 
+    /**
+     * Tests that main page is accessible.
+     */
     @Test
     public void testMainPage() {
         JavalinTest.test(app, (server, client) -> {
@@ -50,6 +73,9 @@ public class AppTest {
         });
     }
 
+    /**
+     * Tests that URLs page is accessible when no URLs are present.
+     */
     @Test
     public void testUrlsEmptyPage() {
         JavalinTest.test(app, (server, client) -> {
@@ -58,6 +84,9 @@ public class AppTest {
         });
     }
 
+    /**
+     * Tests that valid URL can be added successfully.
+     */
     @Test
     public void testAddValidUrl() {
         JavalinTest.test(app, (server, client) -> {
@@ -67,6 +96,9 @@ public class AppTest {
         });
     }
 
+    /**
+     * Tests that invalid URL returns error response.
+     */
     @Test
     public void testAddInvalidUrl() {
         JavalinTest.test(app, (server, client) -> {
@@ -76,10 +108,14 @@ public class AppTest {
         });
     }
 
+    /**
+     * Tests that URL page shows details of specific URL.
+     *
+     * @throws SQLException if database operation fails
+     */
     @Test
     void testShowUrlPage() throws SQLException {
         JavalinTest.test(app, (server, client) -> {
-
             var response = client.post("/urls", "url=https://example.com");
             assertThat(response.code()).isEqualTo(200);
 
@@ -92,11 +128,14 @@ public class AppTest {
         });
     }
 
-
+    /**
+     * Tests that URL checking functionality works correctly.
+     *
+     * @throws SQLException if database operation fails
+     */
     @Test
     void testCheckUrl() throws SQLException {
         JavalinTest.test(app, (server, client) -> {
-
             var testUrl = "https://example.com";
             var addResponse = client.post("/urls", "url=" + testUrl);
             assertThat(addResponse.code()).isEqualTo(200);
@@ -116,6 +155,9 @@ public class AppTest {
         });
     }
 
+    /**
+     * Tests that CSS file is available and has correct content type.
+     */
     @Test
     public void testCssIsAvailable() {
         JavalinTest.test(app, (server, client) -> {

@@ -20,32 +20,16 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.stream.Collectors;
 
-/**
- * Main application class that configures and starts the web server.
- * Handles database initialization, route configuration, and application lifecycle.
- */
 @Slf4j
 public final class App {
     private static final String DEFAULT_PORT = "7070";
     private static final String DEFAULT_DB_URL = "jdbc:h2:mem:project;DB_CLOSE_DELAY=-1";
 
-    /**
-     * Gets the port number from environment variable or uses default.
-     *
-     * @return the port number to listen on
-     */
     private static int getPort() {
         String port = System.getenv().getOrDefault("PORT", DEFAULT_PORT);
         return Integer.parseInt(port);
     }
 
-    /**
-     * Reads a resource file from the classpath.
-     *
-     * @param filePath the path to the resource file
-     * @return the content of the file as a String
-     * @throws IOException if the file cannot be read
-     */
     public static String readResourceFile(String filePath) throws IOException {
         try (InputStream inputStream = App.class.getClassLoader().getResourceAsStream(filePath);
              BufferedReader reader = new BufferedReader(
@@ -54,14 +38,9 @@ public final class App {
         }
     }
 
-    /**
-     * Creates and configures the Javalin application.
-     *
-     * @return configured Javalin app instance
-     * @throws IOException if resource files cannot be read
-     * @throws SQLException if database initialization fails
-     */
+
     public static Javalin getApp() throws IOException, SQLException {
+
         log.info("Starting application initialization");
 
         var app = Javalin.create(config -> {
@@ -121,22 +100,10 @@ public final class App {
         return app;
     }
 
-    /**
-     * Gets the database URL from environment variable or uses default.
-     *
-     * @return the database connection URL
-     */
     public static String getDBUrl() {
         return System.getenv().getOrDefault("JDBC_DATABASE_URL", DEFAULT_DB_URL);
     }
 
-    /**
-     * Main entry point for the application.
-     *
-     * @param args command line arguments
-     * @throws SQLException if database operations fail
-     * @throws IOException if resource files cannot be read
-     */
     public static void main(String[] args) throws SQLException, IOException {
         var app = getApp();
         app.start(getPort());
