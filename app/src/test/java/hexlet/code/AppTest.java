@@ -79,16 +79,14 @@ public class AppTest {
     @Test
     void testShowUrlPage() throws SQLException {
         JavalinTest.test(app, (server, client) -> {
-            // 1. Создаем URL
+
             var response = client.post("/urls", "url=https://example.com");
             assertThat(response.code()).isEqualTo(200);
 
-            // 2. Получаем ID из базы
             List<Url> urls = UrlRepository.getEntities();
             assertThat(urls).isNotEmpty();
             long id = urls.get(0).getId();
 
-            // 3. Запрашиваем страницу
             var showResponse = client.get("/urls/" + id);
             assertThat(showResponse.code()).isEqualTo(200);
         });
@@ -98,16 +96,14 @@ public class AppTest {
     @Test
     void testCheckUrl() throws SQLException {
         JavalinTest.test(app, (server, client) -> {
-            // 1. Создаем URL
+
             var testUrl = "https://example.com";
             var addResponse = client.post("/urls", "url=" + testUrl);
             assertThat(addResponse.code()).isEqualTo(200);
 
-            // 2. Получаем ID через getEntities()
             List<Url> urls = UrlRepository.getEntities();
             assertThat(urls).isNotEmpty();
 
-            // Находим URL по имени
             Optional<Url> createdUrl = urls.stream()
                     .filter(u -> u.getName().equals(testUrl))
                     .findFirst();
@@ -115,7 +111,6 @@ public class AppTest {
             assertThat(createdUrl).isPresent();
             long id = createdUrl.get().getId();
 
-            // 3. Выполняем проверку
             var checkResponse = client.post("/urls/" + id + "/checks");
             assertThat(checkResponse.code()).isEqualTo(200);
         });
