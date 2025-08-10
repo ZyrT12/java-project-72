@@ -80,6 +80,7 @@ public class UrlRepository extends BaseRepository {
         try (var conn = BaseRepository.getDataSource().getConnection();
              var ps = conn.prepareStatement(sql);
              var rs = ps.executeQuery()) {
+
             while (rs.next()) {
                 Url url = new Url(rs.getString("name"));
                 url.setId(rs.getLong("url_id"));
@@ -87,7 +88,9 @@ public class UrlRepository extends BaseRepository {
 
                 Object statusObj = rs.getObject("status_code");
                 if (statusObj != null) {
-                    UrlCheck uc = new UrlCheck(null, null, null, null);
+                    // FIX: не используем конструктор с @NonNull-полями
+                    // создаём через no-args и ставим только нужные поля
+                    UrlCheck uc = new UrlCheck();      // @NoArgsConstructor(force = true)
                     uc.setStatusCode((Integer) statusObj);
                     uc.setCreatedAt(rs.getTimestamp("check_created_at"));
                     url.setLastCheck(uc);
