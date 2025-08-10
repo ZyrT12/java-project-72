@@ -12,9 +12,8 @@
 </head>
 <body>
 
-<!-- Верхняя полоса с брендом и навигацией -->
 <nav class="navbar navbar-dark bg-dark">
-    <div class="container-xl">
+    <div class="container-lg d-flex justify-content-between align-items-center">
         <span class="navbar-brand mb-0 h1">Анализатор страниц</span>
         <ul class="navbar-nav flex-row gap-4">
             <li class="nav-item"><a class="nav-link active" aria-current="page" href="/">Главная</a></li>
@@ -23,26 +22,27 @@
     </div>
 </nav>
 
-<!-- Герой как в примере -->
-<section class="hero-dark py-5">
-    <div class="container-xl">
-        <h1 class="display-2 fw-semibold text-white mb-3">Анализатор страниц</h1>
+<section class="bg-hero py-5">
+    <div class="container-lg text-white">
+        <h1 class="display-2 fw-semibold mb-3">Анализатор страниц</h1>
         <p class="lead text-white-50 mb-4">Бесплатно проверяйте сайты на SEO‑пригодность</p>
 
         @if (flash != null && flashType != null)
             <div class="alert alert-${flashType}">${flash}</div>
         @endif
 
-        <form method="post" action="/urls" class="row g-3 align-items-center">
+        <form method="post" action="/urls" class="row gx-3 gy-2 align-items-center">
             <div class="col-12 col-xl-9">
                 <input name="url"
                        type="text"
                        class="form-control form-control-lg"
                        placeholder="https://www.example.com"
                        required>
-                <div class="form-text text-white-50 mt-2">Пример: https://www.example.com</div>
+                <div class="form-text text-white-50 mt-2">
+                    Пример: https://www.example.com
+                </div>
             </div>
-            <div class="col-12 col-xl-3 d-grid d-xl-block">
+            <div class="col-12 col-xl-auto d-grid d-xl-block">
                 <button type="submit" class="btn btn-primary btn-lg px-4">Проверить</button>
             </div>
         </form>

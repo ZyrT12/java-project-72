@@ -1,31 +1,40 @@
-.hero-dark {
-    background-color: #212529;
-}
-
-.hero-dark a,
-.hero-dark a:hover,
-.hero-dark a:focus {
-    color: #fff;
-    text-decoration: none;
+.container-lg {
+    max-width: 1280px;
 }
 
 .navbar .nav-link {
-    color: rgba(255,255,255,.75);
+    color: rgba(255, 255, 255, .75);
     font-weight: 600;
 }
-.navbar .nav-link.active,
 .navbar .nav-link:hover,
-.navbar .nav-link:focus {
+.navbar .nav-link:focus,
+.navbar .nav-link.active {
     color: #fff;
 }
 
-.container-xl {
-    max-width: 1280px;
+
+.display-2 {
+    letter-spacing: .4px;
 }
-.display-2 { letter-spacing: .5px; }
 
 @media (min-width: 1200px) {
-    .hero-dark .form-control-lg { height: calc(2.875rem + 2px); }
+    .form-control-lg {
+        height: calc(2.875rem + 2px);
+    }
 }
 
-.form-text { font-size: .95rem; }
+.bg-hero {
+    background-color: #212529; /* как у примера */
+    color: #fff;
+}
+
+.bg-hero .form-text {
+    color: rgba(255, 255, 255, .6) !important;
+}
+
+.bg-hero a,
+.bg-hero a:hover,
+.bg-hero a:focus {
+    color: #fff;
+    text-decoration: none;
+}
