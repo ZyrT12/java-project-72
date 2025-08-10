@@ -60,6 +60,12 @@ public final class App {
 
         var hikariConfig = new HikariConfig();
         hikariConfig.setJdbcUrl(getDBUrl());
+
+        hikariConfig.setMaximumPoolSize(1);
+        hikariConfig.setMinimumIdle(0);
+        hikariConfig.setIdleTimeout(10_000);
+        hikariConfig.setConnectionTimeout(5_000);
+
         log.debug("Database URL: {}", hikariConfig.getJdbcUrl());
         var dataSource = new HikariDataSource(hikariConfig);
 

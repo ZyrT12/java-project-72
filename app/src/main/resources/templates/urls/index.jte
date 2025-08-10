@@ -46,15 +46,25 @@
                         <td>
                             <a href="/urls/${url.getId()}">${url.getName()}</a>
                         </td>
-                        <td>${FormatTimestamp.convert(url.getCreatedAt())}</td>
                         <td>
-                            @if (url.getLastCheck() != null)
-                                ${FormatTimestamp.convert(url.getLastCheck().getCreatedAt())}
+                            @if (url.getCreatedAt() != null)
+                                ${FormatTimestamp.convert(url.getCreatedAt())}
+                            @else
+                                —
                             @endif
                         </td>
                         <td>
-                            @if (url.getLastCheck() != null)
+                            @if (url.getLastCheck() != null && url.getLastCheck().getCreatedAt() != null)
+                                ${FormatTimestamp.convert(url.getLastCheck().getCreatedAt())}
+                            @else
+                                —
+                            @endif
+                        </td>
+                        <td>
+                            @if (url.getLastCheck() != null && url.getLastCheck().getStatusCode() != 0)
                                 ${url.getLastCheck().getStatusCode()}
+                            @else
+                                —
                             @endif
                         </td>
                     </tr>
@@ -68,13 +78,5 @@
         </table>
     </div>
 </main>
-
-<footer class="border-top py-3 mt-5 flex-shrink-0">
-    <div class="container-lg">
-        <div class="text-center">
-            <a href="https://hexlet.io" target="_blank">Hexlet</a>
-        </div>
-    </div>
-</footer>
 </body>
 </html>

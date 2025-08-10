@@ -86,6 +86,8 @@ tasks.test {
         junitXml.required.set(true) // убедимся, что XML точно есть
         html.required.set(true)
     }
+
+    systemProperty("junit.jupiter.execution.parallel.enabled", "false")
 }
 
 jacoco {

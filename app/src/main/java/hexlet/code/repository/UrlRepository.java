@@ -72,32 +72,31 @@ public class UrlRepository extends BaseRepository {
     }
 
     public static List<Url> getUrlsAndLastCheck() throws SQLException {
-        var sql = "SELECT DISTINCT ON (urls.id)"
-                + " urls.id AS url_id,"
-                + " urls.name AS name,"
-                + " url_checks.status_code AS status_code,"
-                + " url_checks.created_at AS created_at"
-                + " FROM urls"
-                + " LEFT JOIN url_checks ON urls.id = url_checks.url_id;";
+        var sql = """
+        SELECT DISTINCT ON (u.id)
+            u.id AS url_id,
+            u.name AS name,
+            c.status_code AS status_code,
+            c.created_at AS created_at
+        FROM urls u
+        LEFT JOIN url_checks c ON c.url_id = u.id
+        ORDER BY u.id, c.created_at DESC NULLS LAST
+        """;
 
         var urls = new ArrayList<Url>();
-
         try (var conn = BaseRepository.getDataSource().getConnection();
              var stmt = conn.prepareStatement(sql)) {
-            var resultSet = stmt.executeQuery();
-            while (resultSet.next()) {
-                var urlId = resultSet.getLong("url_id");
-                var name = resultSet.getString("name");
-                var statusCode = resultSet.getInt("status_code");
-                var createdAt = resultSet.getTimestamp("created_at");
-                var url = new Url(name);
-                url.setId(urlId);
+            var rs = stmt.executeQuery();
+            while (rs.next()) {
+                var url = new Url(rs.getString("name"));
+                url.setId(rs.getLong("url_id"));
 
-                if (statusCode != 0) {
-                    var urlCheck = new UrlCheck();
-                    urlCheck.setStatusCode(statusCode);
-                    urlCheck.setCreatedAt(createdAt);
-                    url.setLastCheck(urlCheck);
+                var status = rs.getObject("status_code"); // может быть NULL
+                if (status != null) {
+                    var uc = new UrlCheck();
+                    uc.setStatusCode((Integer) status);
+                    uc.setCreatedAt(rs.getTimestamp("created_at"));
+                    url.setLastCheck(uc);
                 }
                 urls.add(url);
             }
