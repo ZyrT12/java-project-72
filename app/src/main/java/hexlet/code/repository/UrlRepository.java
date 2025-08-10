@@ -89,7 +89,7 @@ public class UrlRepository extends BaseRepository {
 
                 var statusObj = rs.getObject("status_code");
                 if (statusObj != null) {
-                   var uc = new UrlCheck(null, null, null, null);
+                    var uc = new UrlCheck(null, null, null, null);
                     uc.setStatusCode((Integer) statusObj);
                     uc.setCreatedAt(rs.getTimestamp("check_created_at"));
                     url.setLastCheck(uc);

@@ -26,7 +26,7 @@ public class UrlCheckRepository extends BaseRepository {
             ps.executeUpdate();
         }
     }
-    
+
     public static UrlCheck findLastByUrlId(long urlId) throws SQLException {
         var sql = """
             SELECT id, url_id, status_code, title, h1, description, created_at
