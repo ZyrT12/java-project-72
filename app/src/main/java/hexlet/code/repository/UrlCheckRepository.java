@@ -13,7 +13,7 @@ public class UrlCheckRepository extends BaseRepository {
     public static void save(UrlCheck urlCheck, Url url) throws SQLException {
         String sql = "INSERT INTO url_checks (url_id, status_code, title, h1, description, created_at) "
                 + "VALUES (?, ?, ?, ?, ?, ?)";
-        var now = new java.sql.Timestamp(System.currentTimeMillis());
+        Timestamp now = new Timestamp(System.currentTimeMillis());
 
         try (var conn = BaseRepository.getDataSource().getConnection();
              var ps = conn.prepareStatement(sql)) {
@@ -34,13 +34,13 @@ public class UrlCheckRepository extends BaseRepository {
     }
 
     public static UrlCheck findLastByUrlId(long urlId) throws SQLException {
-        var sql = """
-        SELECT id, url_id, status_code, title, h1, description, created_at
-        FROM url_checks
-        WHERE url_id = ?
-        ORDER BY created_at DESC
-        LIMIT 1
-        """;
+        String sql = """
+            SELECT id, url_id, status_code, title, h1, description, created_at
+            FROM url_checks
+            WHERE url_id = ?
+            ORDER BY created_at DESC
+            LIMIT 1
+            """;
 
         try (var conn = BaseRepository.getDataSource().getConnection();
              var ps = conn.prepareStatement(sql)) {
@@ -51,15 +51,14 @@ public class UrlCheckRepository extends BaseRepository {
                     return null;
                 }
 
-
-                var url = new hexlet.code.model.Url();
+                Url url = new Url(null);
                 url.setId(urlId);
 
-                var title = rs.getString("title");
-                var h1 = rs.getString("h1");
-                var description = rs.getString("description");
+                String title = rs.getString("title");
+                String h1 = rs.getString("h1");
+                String description = rs.getString("description");
 
-                var uc = new hexlet.code.model.UrlCheck(url, title, h1, description);
+                UrlCheck uc = new UrlCheck(url, title, h1, description);
                 uc.setId(rs.getLong("id"));
                 uc.setStatusCode(rs.getInt("status_code"));
                 uc.setCreatedAt(rs.getTimestamp("created_at"));
@@ -69,17 +68,18 @@ public class UrlCheckRepository extends BaseRepository {
     }
 
     public static List<UrlCheck> getEntitiesByUrl(Url url) throws SQLException {
-        var sql = "SELECT id, status_code, title, h1, description, created_at "
+        String sql = "SELECT id, status_code, title, h1, description, created_at "
                 + "FROM url_checks "
                 + "WHERE url_id = ? "
                 + "ORDER BY id DESC";
+
         try (var conn = BaseRepository.getDataSource().getConnection();
              var ps = conn.prepareStatement(sql)) {
             ps.setLong(1, url.getId());
             try (var rs = ps.executeQuery()) {
-                var urlChecks = new ArrayList<UrlCheck>();
+                List<UrlCheck> urlChecks = new ArrayList<>();
                 while (rs.next()) {
-                    var uc = new UrlCheck(
+                    UrlCheck uc = new UrlCheck(
                             url,
                             rs.getString("title"),
                             rs.getString("h1"),

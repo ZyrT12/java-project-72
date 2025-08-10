@@ -90,7 +90,7 @@ public class UrlCheckController {
             return;
         }
         var url = opt.get();
-        
+
         var resp = kong.unirest.Unirest.get(url.getName()).asString();
         int status = resp.getStatus();
         String body = resp.getBody();

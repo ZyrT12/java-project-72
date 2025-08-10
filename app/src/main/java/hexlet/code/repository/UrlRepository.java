@@ -13,7 +13,7 @@ public class UrlRepository extends BaseRepository {
 
     public static void save(Url url) throws SQLException {
         String sql = "INSERT INTO urls (name, created_at) VALUES (?, ?)";
-        var now = new Timestamp(System.currentTimeMillis());
+        Timestamp now = new Timestamp(System.currentTimeMillis());
         try (var conn = BaseRepository.getDataSource().getConnection();
              var ps = conn.prepareStatement(sql)) {
             ps.setString(1, url.getName());
@@ -53,16 +53,15 @@ public class UrlRepository extends BaseRepository {
             return Optional.empty();
         }
 
-        var last = UrlCheckRepository.findLastByUrlId(url.getId());
+        UrlCheck last = UrlCheckRepository.findLastByUrlId(url.getId());
         if (last != null) {
             url.setLastCheck(last);
         }
         return Optional.of(url);
     }
 
-    // Для таблицы /urls — переносимый SQL (H2/PG), без DISTINCT ON
     public static List<Url> getUrlsAndLastCheck() throws SQLException {
-        var sql = """
+        String sql = """
             SELECT u.id          AS url_id,
                    u.name        AS name,
                    u.created_at  AS url_created_at,
@@ -77,19 +76,18 @@ public class UrlRepository extends BaseRepository {
             ORDER BY u.id
             """;
 
-        var urls = new ArrayList<Url>();
+        List<Url> urls = new ArrayList<>();
         try (var conn = BaseRepository.getDataSource().getConnection();
              var ps = conn.prepareStatement(sql);
              var rs = ps.executeQuery()) {
-
             while (rs.next()) {
-                var url = new Url(rs.getString("name"));
+                Url url = new Url(rs.getString("name"));
                 url.setId(rs.getLong("url_id"));
                 url.setCreatedAt(rs.getTimestamp("url_created_at"));
 
-                var statusObj = rs.getObject("status_code");
+                Object statusObj = rs.getObject("status_code");
                 if (statusObj != null) {
-                    var uc = new UrlCheck(null, null, null, null);
+                    UrlCheck uc = new UrlCheck(null, null, null, null);
                     uc.setStatusCode((Integer) statusObj);
                     uc.setCreatedAt(rs.getTimestamp("check_created_at"));
                     url.setLastCheck(uc);
@@ -101,13 +99,13 @@ public class UrlRepository extends BaseRepository {
     }
 
     public static List<Url> getEntities() throws SQLException {
-        var sql = "SELECT id, name FROM urls ORDER BY id";
+        String sql = "SELECT id, name FROM urls ORDER BY id";
         try (var conn = BaseRepository.getDataSource().getConnection();
              var ps = conn.prepareStatement(sql);
              var rs = ps.executeQuery()) {
-            var result = new ArrayList<Url>();
+            List<Url> result = new ArrayList<>();
             while (rs.next()) {
-                var url = new Url(rs.getString("name"));
+                Url url = new Url(rs.getString("name"));
                 url.setId(rs.getLong("id"));
                 result.add(url);
             }
