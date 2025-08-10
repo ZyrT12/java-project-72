@@ -10,12 +10,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/style.css" rel="stylesheet">
 </head>
-<body>
+<body class="min-vh-100 d-flex flex-column">
 
 <nav class="navbar navbar-dark bg-dark">
-    <div class="container-lg d-flex justify-content-between align-items-center">
+    <div class="container-lg d-flex align-items-center">
         <span class="navbar-brand mb-0 h1">Анализатор страниц</span>
-        <ul class="navbar-nav flex-row gap-4">
+        <ul class="navbar-nav flex-row gap-4 ms-4">
             <li class="nav-item"><a class="nav-link active" aria-current="page" href="/">Главная</a></li>
             <li class="nav-item"><a class="nav-link" href="/urls">Сайты</a></li>
         </ul>
@@ -24,30 +24,31 @@
 
 <section class="bg-hero py-5">
     <div class="container-lg text-white">
-        <h1 class="display-2 fw-semibold mb-3">Анализатор страниц</h1>
+        <h1 class="display-3 fw-semibold mb-2">Анализатор страниц</h1>
         <p class="lead text-white-50 mb-4">Бесплатно проверяйте сайты на SEO‑пригодность</p>
 
         @if (flash != null && flashType != null)
             <div class="alert alert-${flashType}">${flash}</div>
         @endif
 
-        <form method="post" action="/urls" class="row gx-3 gy-2 align-items-center">
-            <div class="col-12 col-xl-9">
-                <input name="url"
-                       type="text"
-                       class="form-control form-control-lg"
-                       placeholder="https://www.example.com"
-                       required>
-                <div class="form-text text-white-50 mt-2">
-                    Пример: https://www.example.com
-                </div>
+        <!-- компактная форма по центру -->
+        <form method="post" action="/urls" class="hero-form mx-auto">
+            <div class="input-group input-group-lg">
+                <input
+                        name="url"
+                        type="text"
+                        class="form-control"
+                        placeholder="Ссылка"
+                        required>
+                <button type="submit" class="btn btn-primary">Проверить</button>
             </div>
-            <div class="col-12 col-xl-auto d-grid d-xl-block">
-                <button type="submit" class="btn btn-primary btn-lg px-4">Проверить</button>
+            <div class="form-text text-white-50 mt-2">
+                Пример: https://www.example.com
             </div>
         </form>
     </div>
 </section>
+<footer class="d-none"></footer>
 
 </body>
 </html>

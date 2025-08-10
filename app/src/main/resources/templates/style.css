@@ -1,7 +1,17 @@
+html, body {
+    height: 100%;
+}
+body {
+    margin: 0;
+}
+
 .container-lg {
     max-width: 1280px;
 }
 
+.navbar .navbar-brand {
+    font-weight: 600;
+}
 .navbar .nav-link {
     color: rgba(255, 255, 255, .75);
     font-weight: 600;
@@ -12,24 +22,45 @@
     color: #fff;
 }
 
+.bg-hero {
+    background-color: #212529;
+    color: #fff;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
 
+.display-3,
 .display-2 {
     letter-spacing: .4px;
 }
 
-@media (min-width: 1200px) {
-    .form-control-lg {
-        height: calc(2.875rem + 2px);
-    }
-}
-
-.bg-hero {
-    background-color: #212529; /* как у примера */
-    color: #fff;
-}
-
 .bg-hero .form-text {
     color: rgba(255, 255, 255, .6) !important;
+}
+
+
+.hero-form {
+    width: 100%;
+    max-width: 720px;
+}
+
+.input-group-lg > .form-control,
+.input-group-lg > .form-select {
+    height: 3rem;
+    padding-top: .5rem;
+    padding-bottom: .5rem;
+    font-size: 1.125rem;
+    border-radius: .5rem;
+}
+.input-group-lg > .btn {
+    border-radius: .75rem;
+    font-weight: 600;
+}
+
+
+.bg-hero ::placeholder {
+    color: rgba(255, 255, 255, .75);
+    opacity: 1;
 }
 
 .bg-hero a,
