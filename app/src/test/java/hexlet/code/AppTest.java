@@ -13,6 +13,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -51,6 +52,15 @@ public class AppTest {
     @BeforeEach
     public void setUp() throws SQLException, IOException {
         app = App.getApp();
+    }
+
+    @AfterEach
+    void tearDown() {
+        var ds = hexlet.code.repository.BaseRepository.getDataSource();
+        if (ds != null) {
+            ds.close();
+            hexlet.code.repository.BaseRepository.setDataSource(null);
+        }
     }
 
     @Test
