@@ -23,7 +23,6 @@
             <a class="navbar-brand mb-0 h1 me-4" href="/">Анализатор страниц</a>
             <ul class="navbar-nav flex-row">
                 <li class="nav-item">
-                    <!-- здесь active -->
                     <a class="nav-link active" href="/urls">Сайты</a>
                 </li>
             </ul>
@@ -33,11 +32,12 @@
 
 <main class="flex-grow-1">
     <div class="container-lg mt-4">
-        <h1 class="display-5 mb-3">Сайт: ${url.getName()}</h1>
 
         @if (flash != null && flashType != null)
             <div class="alert alert-${flashType}">${flash}</div>
         @endif
+
+        <h1 class="display-5 mb-3">Сайт: ${url.getName()}</h1>
 
         <div class="table-responsive">
             <table class="table table-bordered table-hover">

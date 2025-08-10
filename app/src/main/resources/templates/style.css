@@ -5,13 +5,11 @@ body { margin: 0; }
 
 .navbar > .container-lg { max-width: 1280px; }
 .navbar .navbar-brand { font-weight: 600; }
+.navbar .navbar-nav { flex-direction: row; gap: 1rem; }
 .navbar .nav-link { color: rgba(255,255,255,.75); font-weight: 600; }
 .navbar .nav-link:hover,
 .navbar .nav-link:focus,
 .navbar .nav-link.active { color:#fff; }
-
-.navbar .navbar-nav { flex-direction: row; gap: 1rem; }
-
 
 .bg-hero {
     background-color:#212529;
@@ -21,6 +19,7 @@ body { margin: 0; }
 }
 .bg-hero .container-lg { text-align: center; }
 .hero-form { width:100%; max-width:720px; margin-left:auto; margin-right:auto; }
+.hero-alert { margin: 0 auto 1rem; max-width: 720px; }
 
 .display-3, .display-2 { letter-spacing:.4px; }
 .bg-hero .form-text { color: rgba(255,255,255,.6) !important; }
@@ -40,3 +39,6 @@ body { margin: 0; }
 
 .bg-hero ::placeholder { color: rgba(255,255,255,.75); opacity: 1; }
 .bg-hero a, .bg-hero a:hover, .bg-hero a:focus { color:#fff; text-decoration:none; }
+
+.table { background:#fff; }
+.table thead th { white-space: nowrap; }

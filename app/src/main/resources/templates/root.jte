@@ -12,36 +12,39 @@
 </head>
 <body class="min-vh-100 d-flex flex-column">
 
-<nav class="navbar navbar-dark bg-dark">
-    <div class="container-lg d-flex align-items-center">
-        <a href="/" class="navbar-brand mb-0 h1 me-4">Анализатор страниц</a>
-        <ul class="navbar-nav flex-row">
-            <li class="nav-item">
-                <!-- на главной без active -->
-                <a class="nav-link" href="/urls">Сайты</a>
-            </li>
-        </ul>
-    </div>
-</nav>
+<header class="flex-shrink-0">
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-lg d-flex align-items-center">
+            <a href="/" class="navbar-brand mb-0 h1 me-4">Анализатор страниц</a>
+            <ul class="navbar-nav flex-row">
+                <li class="nav-item">
+                    <a class="nav-link" href="/urls">Сайты</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</header>
 
-<section class="bg-hero py-5">
-    <div class="container-lg text-white">
-        <h1 class="display-3 fw-semibold mb-2">Анализатор страниц</h1>
-        <p class="lead text-white-50 mb-4">Бесплатно проверяйте сайты на SEO‑пригодность</p>
+<main class="flex-grow-1">
+    <section class="bg-hero py-5">
+        <div class="container-lg text-white">
+            <h1 class="display-3 fw-semibold mb-2">Анализатор страниц</h1>
+            <p class="lead text-white-50 mb-4">Бесплатно проверяйте сайты на SEO‑пригодность</p>
 
-        @if (flash != null && flashType != null)
-            <div class="alert alert-${flashType}">${flash}</div>
-        @endif
+            @if (flash != null && flashType != null)
+                <div class="alert alert-${flashType} hero-alert">${flash}</div>
+            @endif
 
-        <form method="post" action="/urls" class="hero-form mx-auto">
-            <div class="input-group input-group-lg">
-                <input name="url" type="text" class="form-control" placeholder="Ссылка" required>
-                <button type="submit" class="btn btn-primary">Проверить</button>
-            </div>
-            <div class="form-text text-white-50 mt-2">Пример: https://www.example.com</div>
-        </form>
-    </div>
-</section>
+            <form method="post" action="/urls" class="hero-form mx-auto">
+                <div class="input-group input-group-lg">
+                    <input name="url" type="text" class="form-control" placeholder="Ссылка" required>
+                    <button type="submit" class="btn btn-primary">Проверить</button>
+                </div>
+                <div class="form-text text-white-50 mt-2">Пример: https://www.example.com</div>
+            </form>
+        </div>
+    </section>
+</main>
 
 </body>
 </html>
