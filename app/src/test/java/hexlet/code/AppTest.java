@@ -140,7 +140,6 @@ public class AppTest {
             var response = client.get("/style.css");
             assertThat(response.code()).isEqualTo(200);
             assertThat(response.header("Content-Type")).isEqualTo("text/css");
-            // Дополнительно проверим, что тело не пустое — это добавит покрытие ветки чтения ресурса
             var body = response.body().string();
             assertThat(body).isNotBlank();
         });
@@ -174,7 +173,6 @@ public class AppTest {
             var r2 = client.post(NamedRoutes.urls(), "url=" + u);
 
             assertThat(r1.code()).isEqualTo(200);
-            // Вторая попытка может вернуть 200 с сообщением «уже существует» или 409 — учитываем оба варианта
             assertThat(r2.code()).isIn(200, 409);
 
             long count = UrlRepository.getEntities()
@@ -241,5 +239,38 @@ public class AppTest {
 
         assertThat(result).isNotNull();
         assertThat(result).anyMatch(u -> u.getName().equals("https://return.branch"));
+    }
+
+    @Test
+    void addUrlNormalizedAndDuplicateDetected() {
+        JavalinTest.test(app, (server, client) -> {
+            int size0 = UrlRepository.getEntities().size();
+
+            var r1 = client.post(NamedRoutes.urls(), "url=https://ru.hexlet.io/courses?utm=1#x");
+            assertThat(r1.code()).isIn(200, 302);
+            int size1 = UrlRepository.getEntities().size();
+            assertThat(size1).isEqualTo(size0 + 1);
+
+            var r2 = client.post(NamedRoutes.urls(), "url=https://ru.hexlet.io/");
+            assertThat(r2.code()).isIn(200, 302, 409);
+
+            int size2 = UrlRepository.getEntities().size();
+            assertThat(size2).isEqualTo(size1);
+        });
+    }
+
+    @Test
+    void urlsIndexContainsAddedUrl() {
+        JavalinTest.test(app, (server, client) -> {
+            var u = "https://ru.hexlet.io";
+            var add = client.post(NamedRoutes.urls(), "url=" + u);
+            assertThat(add.code()).isIn(200, 302);
+
+            var list = client.get(NamedRoutes.urls());
+            assertThat(list.code()).isEqualTo(200);
+            var html = list.body().string();
+
+            assertThat(html).contains("ru.hexlet.io");
+        });
     }
 }
