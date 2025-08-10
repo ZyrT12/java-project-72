@@ -9,7 +9,8 @@ import java.util.Map;
 
 public final class UrlsController {
     public static void index(Context ctx) throws SQLException {
-        var urls = UrlRepository.getEntities(); // Убедитесь, что метод возвращает List<Url>
+        var urls = UrlRepository.getUrlsAndLastCheck();
+
         var flash = ctx.consumeSessionAttribute("flash");
         var flashType = ctx.consumeSessionAttribute("flashType");
 
