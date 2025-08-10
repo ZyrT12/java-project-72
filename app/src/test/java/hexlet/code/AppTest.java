@@ -55,7 +55,7 @@ public class AppTest {
     }
 
     @AfterEach
-    void tearDown() {
+    public final void tearDown() {
         var ds = hexlet.code.repository.BaseRepository.getDataSource();
         if (ds != null) {
             ds.close();
