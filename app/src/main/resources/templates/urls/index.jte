@@ -46,25 +46,15 @@
                         <td>
                             <a href="/urls/${url.getId()}">${url.getName()}</a>
                         </td>
+                        <td>${FormatTimestamp.convert(url.getCreatedAt())}</td>
                         <td>
-                            @if (url.getCreatedAt() != null)
-                                ${FormatTimestamp.convert(url.getCreatedAt())}
-                            @else
-                                —
-                            @endif
-                        </td>
-                        <td>
-                            @if (url.getLastCheck() != null && url.getLastCheck().getCreatedAt() != null)
+                            @if (url.getLastCheck() != null)
                                 ${FormatTimestamp.convert(url.getLastCheck().getCreatedAt())}
-                            @else
-                                —
                             @endif
                         </td>
                         <td>
-                            @if (url.getLastCheck() != null && url.getLastCheck().getStatusCode() != 0)
+                            @if (url.getLastCheck() != null)
                                 ${url.getLastCheck().getStatusCode()}
-                            @else
-                                —
                             @endif
                         </td>
                     </tr>
