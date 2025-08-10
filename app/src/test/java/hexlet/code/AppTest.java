@@ -9,7 +9,10 @@ import io.javalin.Javalin;
 import io.javalin.testtools.JavalinTest;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -135,7 +138,7 @@ public class AppTest {
 
 
     @Test
-    void showUrl_notFound_returns404() {
+    void showUrlNotFoundReturns404() {
         JavalinTest.test(app, (server, client) -> {
             var resp = client.get("/urls/999999");
             assertThat(resp.code()).isEqualTo(404);
@@ -143,7 +146,7 @@ public class AppTest {
     }
 
     @Test
-    void addEmptyUrl_returns400_andNoInsert() throws Exception {
+    void addEmptyUrlReturns400AndNoInsert() throws Exception {
         JavalinTest.test(app, (server, client) -> {
             var before = UrlRepository.getEntities().size();
             var resp = client.post(NamedRoutes.urls(), "url=");
@@ -154,7 +157,7 @@ public class AppTest {
     }
 
     @Test
-    void addDuplicateUrl_notInsertedTwice() throws Exception {
+    void addDuplicateUrlNotInsertedTwice() throws Exception {
         JavalinTest.test(app, (server, client) -> {
             var u = "https://ru.hexlet.io";
             var r1 = client.post(NamedRoutes.urls(), "url=" + u);
@@ -173,13 +176,13 @@ public class AppTest {
     }
 
     @Test
-    void datasource_isConfigured() {
+    void datasourceIsConfigured() {
         assertThat(BaseRepository.getDataSource()).isNotNull();
     }
 
     @Test
-    void repo_findById_notFound_and_isExist_false() throws Exception {
-        // Сначала создаём одну запись
+    void repoFindByIdNotFoundAndIsExistFalse() throws Exception {
+
         Url u = new Url("https://repo.test/one");
         UrlRepository.save(u);
 
@@ -195,8 +198,7 @@ public class AppTest {
     }
 
     @Test
-    void repo_getEntitiesByUrl_readsAllFields() throws Exception {
-        // 1) Создаём URL
+    void repoGetEntitiesByUrlReadsAllFields() throws Exception {
         var url = new hexlet.code.model.Url("https://repo.fields");
         UrlRepository.save(url);
         var saved = UrlRepository.getEntities().stream()
@@ -221,8 +223,7 @@ public class AppTest {
     }
 
     @Test
-    void repo_getUrlsAndLastCheck_reachesReturn() throws Exception {
-        
+    void repoGetUrlsAndLastCheckReachesReturn() throws Exception {
         var url = new hexlet.code.model.Url("https://return.branch");
         UrlRepository.save(url);
 
