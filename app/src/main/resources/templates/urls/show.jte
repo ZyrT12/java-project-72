@@ -2,7 +2,6 @@
 @import hexlet.code.model.UrlCheck
 @import java.util.List
 @import hexlet.code.utils.FormatTimestamp
-
 @param Url url
 @param List<UrlCheck> urlChecks
 @param String flash
@@ -14,20 +13,27 @@
     <meta charset="UTF-8">
     <title>Сайт ${url.getId()}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/style.css" rel="stylesheet"> <!-- подключаем общий css -->
 </head>
 <body class="min-vh-100 d-flex flex-column">
 <header class="flex-shrink-0">
-    <nav class="navbar navbar-expand-md navbar-dark bg-dark px-3">
-        <a class="navbar-brand" href="/">Анализатор страниц</a>
-        <a class="nav-link" href="/urls">Сайты</a>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-lg d-flex align-items-center">
+            <a class="navbar-brand mb-0 h1 me-4" href="/">Анализатор страниц</a>
+            <ul class="navbar-nav flex-row">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/urls">Сайты</a> <!-- active: белая -->
+                </li>
+            </ul>
+        </div>
     </nav>
 </header>
 
 <main class="flex-grow-1">
-    <div class="container-lg mt-3">
-        <h1>Сайт: ${url.getName()}</h1>
+    <div class="container-lg mt-4">
+        <h1 class="display-5 mb-3">Сайт: ${url.getName()}</h1>
 
-        @if (flash != null)
+        @if (flash != null && flashType != null)
             <div class="alert alert-${flashType}">${flash}</div>
         @endif
 

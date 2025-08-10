@@ -17,7 +17,7 @@
         <a href="/" class="navbar-brand mb-0 h1 me-4">Анализатор страниц</a>
         <ul class="navbar-nav flex-row">
             <li class="nav-item">
-                <a class="nav-link" href="/urls">Сайты</a>
+                <a class="nav-link active" href="/urls">Сайты</a>
             </li>
         </ul>
     </div>

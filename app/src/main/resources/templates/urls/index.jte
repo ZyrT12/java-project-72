@@ -11,25 +11,32 @@
     <meta charset="UTF-8">
     <title>Список сайтов</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/style.css" rel="stylesheet"> <!-- важно: подключаем общий css -->
 </head>
 <body class="min-vh-100 d-flex flex-column">
 <header class="flex-shrink-0">
-    <nav class="navbar navbar-expand-md navbar-dark bg-dark px-3">
-        <a class="navbar-brand" href="/">Анализатор страниц</a>
-        <a class="nav-link" href="/urls">Сайты</a>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-lg d-flex align-items-center">
+            <a class="navbar-brand mb-0 h1 me-4" href="/">Анализатор страниц</a>
+            <ul class="navbar-nav flex-row">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/urls">Сайты</a> <!-- active: белая -->
+                </li>
+            </ul>
+        </div>
     </nav>
 </header>
 
 <main class="flex-grow-1">
-    <div class="container-lg mt-3">
-        <h1>Список сайтов</h1>
+    <div class="container-lg mt-4">
+        <h1 class="display-4 mb-3">Список сайтов</h1>
 
-        @if (flash != null)
+        @if (flash != null && flashType != null)
             <div class="alert alert-${flashType}">${flash}</div>
         @endif
 
         <table class="table table-bordered table-hover">
-            <thead>
+            <thead class="table-light">
             <tr>
                 <th>ID</th>
                 <th>Сайт</th>
@@ -43,9 +50,7 @@
                 @for (Url url : urls)
                     <tr>
                         <td>${url.getId()}</td>
-                        <td>
-                            <a href="/urls/${url.getId()}">${url.getName()}</a>
-                        </td>
+                        <td><a href="/urls/${url.getId()}">${url.getName()}</a></td>
                         <td>${FormatTimestamp.convert(url.getCreatedAt())}</td>
                         <td>
                             @if (url.getLastCheck() != null)
@@ -60,9 +65,7 @@
                     </tr>
                 @endfor
             @else
-                <tr>
-                    <td colspan="5" class="text-center">Нет добавленных сайтов</td>
-                </tr>
+                <tr><td colspan="5" class="text-center">Нет добавленных сайтов</td></tr>
             @endif
             </tbody>
         </table>
