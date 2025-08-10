@@ -17,7 +17,8 @@
         <a href="/" class="navbar-brand mb-0 h1 me-4">Анализатор страниц</a>
         <ul class="navbar-nav flex-row">
             <li class="nav-item">
-                <a class="nav-link active" href="/urls">Сайты</a>
+                <!-- на главной без active -->
+                <a class="nav-link" href="/urls">Сайты</a>
             </li>
         </ul>
     </div>
@@ -34,17 +35,10 @@
 
         <form method="post" action="/urls" class="hero-form mx-auto">
             <div class="input-group input-group-lg">
-                <input
-                        name="url"
-                        type="text"
-                        class="form-control"
-                        placeholder="Ссылка"
-                        required>
+                <input name="url" type="text" class="form-control" placeholder="Ссылка" required>
                 <button type="submit" class="btn btn-primary">Проверить</button>
             </div>
-            <div class="form-text text-white-50 mt-2">
-                Пример: https://www.example.com
-            </div>
+            <div class="form-text text-white-50 mt-2">Пример: https://www.example.com</div>
         </form>
     </div>
 </section>

@@ -11,16 +11,18 @@
     <meta charset="UTF-8">
     <title>Список сайтов</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/style.css" rel="stylesheet"> <!-- важно: подключаем общий css -->
+    <link href="/style.css" rel="stylesheet">
 </head>
 <body class="min-vh-100 d-flex flex-column">
+
 <header class="flex-shrink-0">
     <nav class="navbar navbar-dark bg-dark">
         <div class="container-lg d-flex align-items-center">
             <a class="navbar-brand mb-0 h1 me-4" href="/">Анализатор страниц</a>
             <ul class="navbar-nav flex-row">
                 <li class="nav-item">
-                    <a class="nav-link active" href="/urls">Сайты</a> <!-- active: белая -->
+                    <!-- здесь active, чтобы была белой -->
+                    <a class="nav-link active" href="/urls">Сайты</a>
                 </li>
             </ul>
         </div>
@@ -71,5 +73,6 @@
         </table>
     </div>
 </main>
+
 </body>
 </html>
