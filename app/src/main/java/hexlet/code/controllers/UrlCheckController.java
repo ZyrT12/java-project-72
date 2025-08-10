@@ -80,4 +80,37 @@ public class UrlCheckController {
             ctx.status(400).result("Invalid URL ID format");
         }
     }
+
+    public static void create(io.javalin.http.Context ctx) throws Exception {
+        long id = Long.parseLong(ctx.pathParam("id"));
+
+        var opt = hexlet.code.repository.UrlRepository.findById(id);
+        if (opt.isEmpty()) {
+            ctx.status(404);
+            return;
+        }
+        var url = opt.get();
+        
+        var resp = kong.unirest.Unirest.get(url.getName()).asString();
+        int status = resp.getStatus();
+        String body = resp.getBody();
+
+        org.jsoup.nodes.Document doc = org.jsoup.Jsoup.parse(body);
+        String title = doc.title();
+
+        var h1El = doc.selectFirst("h1");
+        String h1 = h1El != null ? h1El.text() : null;
+
+        var descEl = doc.selectFirst("meta[name=description]");
+        String description = descEl != null ? descEl.attr("content") : null;
+
+        var check = new hexlet.code.model.UrlCheck(url, title, h1, description);
+        check.setStatusCode(status);
+        hexlet.code.repository.UrlCheckRepository.save(check, url);
+
+        ctx.sessionAttribute("flash", "Страница успешно проверена");
+        ctx.sessionAttribute("flashType", "success");
+        ctx.redirect("/urls/" + id);
+    }
+
 }
