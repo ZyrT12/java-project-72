@@ -14,10 +14,11 @@
 
 <nav class="navbar navbar-dark bg-dark">
     <div class="container-lg d-flex align-items-center">
-        <span class="navbar-brand mb-0 h1">Анализатор страниц</span>
-        <ul class="navbar-nav flex-row gap-4 ms-4">
-            <li class="nav-item"><a class="nav-link active" aria-current="page" href="/">Главная</a></li>
-            <li class="nav-item"><a class="nav-link" href="/urls">Сайты</a></li>
+        <a href="/" class="navbar-brand mb-0 h1 me-4">Анализатор страниц</a>
+        <ul class="navbar-nav flex-row">
+            <li class="nav-item">
+                <a class="nav-link" href="/urls">Сайты</a>
+            </li>
         </ul>
     </div>
 </nav>
@@ -31,7 +32,6 @@
             <div class="alert alert-${flashType}">${flash}</div>
         @endif
 
-        <!-- компактная форма по центру -->
         <form method="post" action="/urls" class="hero-form mx-auto">
             <div class="input-group input-group-lg">
                 <input
@@ -48,7 +48,6 @@
         </form>
     </div>
 </section>
-<footer class="d-none"></footer>
 
 </body>
 </html>
