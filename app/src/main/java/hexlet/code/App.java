@@ -38,9 +38,7 @@ public final class App {
         }
     }
 
-
     public static Javalin getApp() throws IOException, SQLException {
-
         log.info("Starting application initialization");
 
         var app = Javalin.create(config -> {
@@ -60,7 +58,6 @@ public final class App {
 
         var hikariConfig = new HikariConfig();
         hikariConfig.setJdbcUrl(getDBUrl());
-
         hikariConfig.setMaximumPoolSize(1);
         hikariConfig.setMinimumIdle(0);
         hikariConfig.setIdleTimeout(10_000);
@@ -83,18 +80,14 @@ public final class App {
         BaseRepository.setDataSource(dataSource);
 
         app.get(NamedRoutes.home(), RootController::home);
-        app.post(NamedRoutes.urls(), RootController::addUrl);
+
         app.get(NamedRoutes.urls(), UrlsController::index);
-        app.get(NamedRoutes.urlPath("{id}"), UrlCheckController::show);
+        app.post(NamedRoutes.urls(), UrlsController::create);
+        app.get(NamedRoutes.urlPath("{id}"), UrlsController::show);
         app.post(NamedRoutes.urlCheck("{id}"), UrlCheckController::check);
 
-        app.before(ctx -> {
-            log.info("Request: {} {} | Body: {}", ctx.method(), ctx.path(), ctx.body());
-        });
-
-        app.after(ctx -> {
-            log.info("Response: {} | Status: {}", ctx.path(), ctx.status());
-        });
+        app.before(ctx -> log.info("Request: {} {} | Body: {}", ctx.method(), ctx.path(), ctx.body()));
+        app.after(ctx -> log.info("Response: {} | Status: {}", ctx.path(), ctx.status()));
 
         app.exception(Exception.class, (e, ctx) -> {
             log.error("Unhandled exception", e);
@@ -102,7 +95,6 @@ public final class App {
         });
 
         log.info("Application initialized successfully");
-
         return app;
     }
 

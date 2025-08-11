@@ -5,18 +5,22 @@ import hexlet.code.model.UrlCheck;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class UrlCheckRepository extends BaseRepository {
 
     public static void save(UrlCheck urlCheck, Url url) throws SQLException {
         String sql = "INSERT INTO url_checks (url_id, status_code, title, h1, description, created_at) "
                 + "VALUES (?, ?, ?, ?, ?, ?)";
-        Timestamp now = new Timestamp(System.currentTimeMillis());
+
+        LocalDateTime created = urlCheck.getCreatedAt() != null ? urlCheck.getCreatedAt() : LocalDateTime.now();
 
         try (var conn = BaseRepository.getDataSource().getConnection();
-             var ps = conn.prepareStatement(sql)) {
+             var ps = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+
             ps.setLong(1, url.getId());
 
             if (urlCheck.getStatusCode() == null) {
@@ -28,12 +32,19 @@ public class UrlCheckRepository extends BaseRepository {
             ps.setString(3, urlCheck.getTitle());
             ps.setString(4, urlCheck.getH1());
             ps.setString(5, urlCheck.getDescription());
-            ps.setTimestamp(6, now);
+            ps.setTimestamp(6, Timestamp.valueOf(created));
+
             ps.executeUpdate();
+
+            try (var keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    urlCheck.setId(keys.getLong(1));
+                }
+            }
         }
     }
 
-    public static UrlCheck findLastByUrlId(long urlId) throws SQLException {
+    public static Optional<UrlCheck> findLatestByUrlId(long urlId) throws SQLException {
         String sql = """
             SELECT id, url_id, status_code, title, h1, description, created_at
             FROM url_checks
@@ -48,7 +59,7 @@ public class UrlCheckRepository extends BaseRepository {
 
             try (var rs = ps.executeQuery()) {
                 if (!rs.next()) {
-                    return null;
+                    return Optional.empty();
                 }
 
                 Url url = new Url(null);
@@ -60,18 +71,21 @@ public class UrlCheckRepository extends BaseRepository {
 
                 UrlCheck uc = new UrlCheck(url, title, h1, description);
                 uc.setId(rs.getLong("id"));
-                uc.setStatusCode(rs.getInt("status_code"));
-                uc.setCreatedAt(rs.getTimestamp("created_at"));
-                return uc;
+                uc.setStatusCode((Integer) rs.getObject("status_code")); // null-safe
+                var ts = rs.getTimestamp("created_at");
+                uc.setCreatedAt(ts != null ? ts.toLocalDateTime() : null);
+                return Optional.of(uc);
             }
         }
     }
 
     public static List<UrlCheck> getEntitiesByUrl(Url url) throws SQLException {
-        String sql = "SELECT id, status_code, title, h1, description, created_at "
-                + "FROM url_checks "
-                + "WHERE url_id = ? "
-                + "ORDER BY id DESC";
+        String sql = """
+            SELECT id, status_code, title, h1, description, created_at
+            FROM url_checks
+            WHERE url_id = ?
+            ORDER BY id DESC
+            """;
 
         try (var conn = BaseRepository.getDataSource().getConnection();
              var ps = conn.prepareStatement(sql)) {
@@ -86,8 +100,9 @@ public class UrlCheckRepository extends BaseRepository {
                             rs.getString("description")
                     );
                     uc.setId(rs.getLong("id"));
-                    uc.setStatusCode(rs.getInt("status_code"));
-                    uc.setCreatedAt(rs.getTimestamp("created_at"));
+                    uc.setStatusCode((Integer) rs.getObject("status_code")); // null-safe
+                    var ts = rs.getTimestamp("created_at");
+                    uc.setCreatedAt(ts != null ? ts.toLocalDateTime() : null);
                     urlChecks.add(uc);
                 }
                 return urlChecks;

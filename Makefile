@@ -1,24 +1,20 @@
 build:
-	cd app && chmod +x gradlew && ./gradlew clean build
+	make -C app ./gradlew clean build
 
 install:
-	cd app && ./gradlew clean install
+	make -C app ./gradlew clean install
 
 run:
-	cd app && ./gradlew run
+	make -C app ./gradlew run
 
 lint:
-	cd app && ./gradlew checkstyleMain
+	make -C app ./gradlew checkstyleMain
 
 report:
-	cd app && ./gradlew jacocoTestReport
+	make -C app ./gradlew jacocoTestReport
 
 run-dist:
 	./app/build/install/app/bin/app
-
-setup:
-	chmod +x app/gradlew
-	cd app && ./gradlew wrapper --gradle-version 8.14
 
 build-run: build run
 

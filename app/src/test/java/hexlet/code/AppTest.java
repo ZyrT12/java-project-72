@@ -1,6 +1,7 @@
 package hexlet.code;
 
 import hexlet.code.model.Url;
+import hexlet.code.model.UrlCheck;
 import hexlet.code.repository.BaseRepository;
 import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
@@ -15,10 +16,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterEach;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,15 +30,26 @@ public class AppTest {
 
     private Javalin app;
     private static MockWebServer mockServer;
+    private static String fixtureHtml;
+
+    private static String readFixture(String path) throws IOException {
+        try (var is = AppTest.class.getClassLoader().getResourceAsStream(path)) {
+            assertThat(is).as("fixture not found: " + path).isNotNull();
+            try (var br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                var sb = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null) {
+                    sb.append(line).append('\n');
+                }
+                return sb.toString();
+            }
+        }
+    }
 
     @BeforeAll
     public static void mockStart() throws IOException {
+        fixtureHtml = readFixture("fixtures/page.html");
         mockServer = new MockWebServer();
-        mockServer.enqueue(new MockResponse()
-                .setBody("<html><head><title>Test page</title>"
-                        + "<meta name=\"description\" content=\"Test desc\">"
-                        + "</head><body><h1>Test H1</h1></body></html>")
-                .setResponseCode(200));
         mockServer.start();
     }
 
@@ -56,10 +71,10 @@ public class AppTest {
 
     @AfterEach
     public final void tearDown() {
-        var ds = hexlet.code.repository.BaseRepository.getDataSource();
+        var ds = BaseRepository.getDataSource();
         if (ds != null) {
             ds.close();
-            hexlet.code.repository.BaseRepository.setDataSource(null);
+            BaseRepository.setDataSource(null);
         }
     }
 
@@ -84,7 +99,7 @@ public class AppTest {
         JavalinTest.test(app, (server, client) -> {
             var validUrl = "https://ru.hexlet.io";
             var response = client.post(NamedRoutes.urls(), "url=" + validUrl);
-            assertThat(response.code()).isEqualTo(200);
+            assertThat(response.code()).isIn(200, 302); // create -> redirect
         });
     }
 
@@ -98,10 +113,10 @@ public class AppTest {
     }
 
     @Test
-    void testShowUrlPage() throws SQLException {
+    void testShowUrlPage() {
         JavalinTest.test(app, (server, client) -> {
             var response = client.post("/urls", "url=https://example.com");
-            assertThat(response.code()).isEqualTo(200);
+            assertThat(response.code()).isIn(200, 302);
 
             List<Url> urls = UrlRepository.getEntities();
             assertThat(urls).isNotEmpty();
@@ -113,29 +128,35 @@ public class AppTest {
     }
 
     @Test
-    void testCheckUrl() throws SQLException {
+    void testCheckUrl_and_fieldsPersisted() throws Exception {
+
+        mockServer.enqueue(new MockResponse()
+                .setBody(fixtureHtml)
+                .setResponseCode(200));
+        var pageUrl = mockServer.url("/page").toString();
+
         JavalinTest.test(app, (server, client) -> {
-            var testUrl = "https://example.com";
-            var addResponse = client.post("/urls", "url=" + testUrl);
-            assertThat(addResponse.code()).isEqualTo(200);
+            var addResponse = client.post("/urls", "url=" + pageUrl);
+            assertThat(addResponse.code()).isIn(200, 302);
 
-            List<Url> urls = UrlRepository.getEntities();
-            assertThat(urls).isNotEmpty();
-
-            Optional<Url> createdUrl = urls.stream()
-                    .filter(u -> u.getName().equals(testUrl))
-                    .findFirst();
-
-            assertThat(createdUrl).isPresent();
-            long id = createdUrl.get().getId();
+            var urls = UrlRepository.getEntities();
+            var created = urls.stream().filter(u -> u.getName().equals(pageUrl)).findFirst().orElseThrow();
+            long id = created.getId();
 
             var checkResponse = client.post("/urls/" + id + "/checks");
-            assertThat(checkResponse.code()).isEqualTo(200);
+            assertThat(checkResponse.code()).isIn(200, 302);
+
+            var latest = UrlCheckRepository.findLatestByUrlId(id).orElseThrow();
+            assertThat(latest.getStatusCode()).isEqualTo(200);
+            assertThat(latest.getTitle()).isEqualTo("Test page");
+            assertThat(latest.getH1()).isEqualTo("Test H1");
+            assertThat(latest.getDescription()).isEqualTo("Test desc");
+            assertThat(latest.getCreatedAt()).isNotNull();
         });
     }
 
     @Test
-    public void testCssIsAvailable() throws IOException {
+    public void testCssIsAvailable() {
         JavalinTest.test(app, (server, client) -> {
             var response = client.get("/style.css");
             assertThat(response.code()).isEqualTo(200);
@@ -144,7 +165,6 @@ public class AppTest {
             assertThat(body).isNotBlank();
         });
     }
-
 
     @Test
     void showUrlNotFoundReturns404() {
@@ -155,7 +175,7 @@ public class AppTest {
     }
 
     @Test
-    void addEmptyUrlReturns400AndNoInsert() throws Exception {
+    void addEmptyUrlReturns400AndNoInsert() {
         JavalinTest.test(app, (server, client) -> {
             var before = UrlRepository.getEntities().size();
             var resp = client.post(NamedRoutes.urls(), "url=");
@@ -166,14 +186,14 @@ public class AppTest {
     }
 
     @Test
-    void addDuplicateUrlNotInsertedTwice() throws Exception {
+    void addDuplicateUrlNotInsertedTwice() {
         JavalinTest.test(app, (server, client) -> {
             var u = "https://ru.hexlet.io";
             var r1 = client.post(NamedRoutes.urls(), "url=" + u);
             var r2 = client.post(NamedRoutes.urls(), "url=" + u);
 
-            assertThat(r1.code()).isEqualTo(200);
-            assertThat(r2.code()).isIn(200, 409);
+            assertThat(r1.code()).isIn(200, 302);
+            assertThat(r2.code()).isIn(200, 302, 409);
 
             long count = UrlRepository.getEntities()
                     .stream()
@@ -190,8 +210,8 @@ public class AppTest {
 
     @Test
     void repoFindByIdNotFoundAndIsExistFalse() throws Exception {
-
         Url u = new Url("https://repo.test/one");
+        u.setCreatedAt(LocalDateTime.now());
         UrlRepository.save(u);
 
         assertThat(UrlRepository.isExist("https://repo.test/one")).isTrue();
@@ -207,15 +227,16 @@ public class AppTest {
 
     @Test
     void repoGetEntitiesByUrlReadsAllFields() throws Exception {
-        var url = new hexlet.code.model.Url("https://repo.fields");
+        var url = new Url("https://repo.fields");
+        url.setCreatedAt(LocalDateTime.now());
         UrlRepository.save(url);
         var saved = UrlRepository.getEntities().stream()
                 .filter(u -> u.getName().equals("https://repo.fields"))
                 .findFirst().orElseThrow();
-        saved.setId(saved.getId());
 
-        var check = new hexlet.code.model.UrlCheck(saved, "Title X", "H1 X", "Desc X");
+        var check = new UrlCheck(saved, "Title X", "H1 X", "Desc X");
         check.setStatusCode(201);
+        check.setCreatedAt(LocalDateTime.now());
         UrlCheckRepository.save(check, saved);
 
         var checks = UrlCheckRepository.getEntitiesByUrl(saved);
@@ -232,7 +253,8 @@ public class AppTest {
 
     @Test
     void repoGetUrlsAndLastCheckReachesReturn() throws Exception {
-        var url = new hexlet.code.model.Url("https://return.branch");
+        var url = new Url("https://return.branch");
+        url.setCreatedAt(LocalDateTime.now());
         UrlRepository.save(url);
 
         var result = UrlRepository.getUrlsAndLastCheck();

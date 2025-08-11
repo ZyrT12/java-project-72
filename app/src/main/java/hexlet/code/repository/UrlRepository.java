@@ -3,8 +3,10 @@ package hexlet.code.repository;
 import hexlet.code.model.Url;
 import hexlet.code.model.UrlCheck;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -13,12 +15,20 @@ public class UrlRepository extends BaseRepository {
 
     public static void save(Url url) throws SQLException {
         String sql = "INSERT INTO urls (name, created_at) VALUES (?, ?)";
-        Timestamp now = new Timestamp(System.currentTimeMillis());
+        LocalDateTime now = url.getCreatedAt() != null ? url.getCreatedAt() : LocalDateTime.now();
+
         try (var conn = BaseRepository.getDataSource().getConnection();
-             var ps = conn.prepareStatement(sql)) {
+             var ps = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+
             ps.setString(1, url.getName());
-            ps.setTimestamp(2, now);
+            ps.setTimestamp(2, Timestamp.valueOf(now));
             ps.executeUpdate();
+
+            try (var keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    url.setId(keys.getLong(1));
+                }
+            }
         }
     }
 
@@ -42,21 +52,17 @@ public class UrlRepository extends BaseRepository {
             ps.setLong(1, id);
             try (var rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    url = new Url(rs.getString("name"));
-                    url.setId(rs.getLong("id"));
-                    url.setCreatedAt(rs.getTimestamp("created_at"));
+                    url = map(rs);
                 }
             }
         }
-
         if (url == null) {
             return Optional.empty();
         }
 
-        UrlCheck last = UrlCheckRepository.findLastByUrlId(url.getId());
-        if (last != null) {
-            url.setLastCheck(last);
-        }
+        var lastOpt = UrlCheckRepository.findLatestByUrlId(url.getId());
+        lastOpt.ifPresent(url::setLastCheck);
+
         return Optional.of(url);
     }
 
@@ -84,15 +90,15 @@ public class UrlRepository extends BaseRepository {
             while (rs.next()) {
                 Url url = new Url(rs.getString("name"));
                 url.setId(rs.getLong("url_id"));
-                url.setCreatedAt(rs.getTimestamp("url_created_at"));
+                var urlTs = rs.getTimestamp("url_created_at");
+                url.setCreatedAt(urlTs != null ? urlTs.toLocalDateTime() : null);
 
-                Object statusObj = rs.getObject("status_code");
+                var statusObj = rs.getObject("status_code");
                 if (statusObj != null) {
-                    // FIX: не используем конструктор с @NonNull-полями
-                    // создаём через no-args и ставим только нужные поля
-                    UrlCheck uc = new UrlCheck();      // @NoArgsConstructor(force = true)
+                    var uc = new UrlCheck();
                     uc.setStatusCode((Integer) statusObj);
-                    uc.setCreatedAt(rs.getTimestamp("check_created_at"));
+                    var checkTs = rs.getTimestamp("check_created_at");
+                    uc.setCreatedAt(checkTs != null ? checkTs.toLocalDateTime() : null);
                     url.setLastCheck(uc);
                 }
                 urls.add(url);
@@ -114,5 +120,13 @@ public class UrlRepository extends BaseRepository {
             }
             return result;
         }
+    }
+
+    private static Url map(ResultSet rs) throws SQLException {
+        var url = new Url(rs.getString("name"));
+        url.setId(rs.getLong("id"));
+        var ts = rs.getTimestamp("created_at");
+        url.setCreatedAt(ts != null ? ts.toLocalDateTime() : null);
+        return url;
     }
 }
