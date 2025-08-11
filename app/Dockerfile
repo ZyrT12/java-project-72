@@ -14,7 +14,7 @@ COPY src src
 
 RUN ./gradlew --no-daemon clean installDist
 
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jdk
 WORKDIR /opt/app
 
 COPY --from=builder /app/build/install/app /opt/app
