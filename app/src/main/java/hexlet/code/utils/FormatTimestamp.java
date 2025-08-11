@@ -1,16 +1,26 @@
 package hexlet.code.utils;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class FormatTimestamp {
-    private static final DateTimeFormatter FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+public final class FormatTimestamp {
 
-    public static String convert(Timestamp timestamp) {
-        if (timestamp == null) {
-            return "—";
+    private static final DateTimeFormatter DEFAULT_FMT = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+    private FormatTimestamp() { }
+
+    public static String convert(Timestamp ts) {
+        if (ts == null) {
+            return "";
         }
-        return timestamp.toLocalDateTime().format(FORMATTER);
+        return ts.toLocalDateTime().format(DEFAULT_FMT);
+    }
+
+    public static String convert(LocalDateTime dt) {
+        if (dt == null) {
+            return "";
+        }
+        return dt.format(DEFAULT_FMT);
     }
 }

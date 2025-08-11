@@ -15,6 +15,7 @@ import java.util.Optional;
 
 public final class UrlsController {
 
+    private static final int BAD_REQUEST = 400;
     private UrlsController() { }
 
     public static void index(Context ctx) throws SQLException {
@@ -50,7 +51,6 @@ public final class UrlsController {
     }
 
     public static void create(Context ctx) throws SQLException {
-        final int BAD_REQUEST = 400;
 
         var raw = ctx.formParamAsClass("url", String.class).getOrDefault("").trim();
 
@@ -83,17 +83,31 @@ public final class UrlsController {
     }
 
     private static URI normalizeToUri(String input) {
-        if (input.isEmpty()) {
+        if (input == null || input.isBlank()) {
             throw new IllegalArgumentException("empty");
         }
-        URI uri = URI.create(input);
+        URI uri = URI.create(input.trim());
         if (uri.getScheme() == null) {
-            uri = URI.create("http://" + input);
+            uri = URI.create("http://" + input.trim());
         }
-        if (uri.getHost() == null || uri.getHost().isEmpty()) {
-            throw new IllegalArgumentException("no host");
+        var host = uri.getHost();
+        if (!isAcceptableHost(host)) {
+            throw new IllegalArgumentException("bad host");
         }
         return uri;
+    }
+
+    private static boolean isAcceptableHost(String host) {
+        if (host == null || host.isBlank()) {
+            return false;
+        }
+        if ("localhost".equalsIgnoreCase(host)) {
+            return true;
+        }
+        if (host.matches("\\d+\\.\\d+\\.\\d+\\.\\d+")) {
+            return true;
+        }
+        return host.contains(".");
     }
 
     private static String buildNormalizedUrl(URI uri) {

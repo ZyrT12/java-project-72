@@ -128,25 +128,25 @@ public class AppTest {
     }
 
     @Test
-    void testCheckUrl_and_fieldsPersisted() throws Exception {
+    void testCheckUrlAndFieldsPersisted() throws Exception {
+        var pageUrl = mockServer.url("/").toString();
 
         mockServer.enqueue(new MockResponse()
                 .setBody(fixtureHtml)
                 .setResponseCode(200));
-        var pageUrl = mockServer.url("/page").toString();
 
         JavalinTest.test(app, (server, client) -> {
             var addResponse = client.post("/urls", "url=" + pageUrl);
             assertThat(addResponse.code()).isIn(200, 302);
 
-            var urls = UrlRepository.getEntities();
-            var created = urls.stream().filter(u -> u.getName().equals(pageUrl)).findFirst().orElseThrow();
-            long id = created.getId();
+            var created = UrlRepository.getEntities().stream()
+                    .filter(u -> u.getName().equals(pageUrl.replaceAll("/$", ""))) // нормализация убирает завершающий '/'
+                    .findFirst().orElseThrow();
 
-            var checkResponse = client.post("/urls/" + id + "/checks");
+            var checkResponse = client.post("/urls/" + created.getId() + "/checks");
             assertThat(checkResponse.code()).isIn(200, 302);
 
-            var latest = UrlCheckRepository.findLatestByUrlId(id).orElseThrow();
+            var latest = UrlCheckRepository.findLatestByUrlId(created.getId()).orElseThrow();
             assertThat(latest.getStatusCode()).isEqualTo(200);
             assertThat(latest.getTitle()).isEqualTo("Test page");
             assertThat(latest.getH1()).isEqualTo("Test H1");
