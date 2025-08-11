@@ -1,35 +1,28 @@
-FROM node:20.6.1 AS frontend
+FROM eclipse-temurin:21-jdk AS builder
 
-WORKDIR /frontend
+WORKDIR /app
 
-COPY frontend/package*.json .
+COPY app/gradlew .
+COPY app/gradle gradle
+COPY app/build.gradle.kts .
+COPY app/settings.gradle.kts .
 
-RUN npm ci
-
-COPY frontend /frontend
-
-RUN npm run build
-
-FROM eclipse-temurin:21-jdk
-
-RUN apt-get update && apt-get install -yq make unzip
-
-WORKDIR /backend
-
-COPY gradle gradle
-COPY build.gradle.kts .
-COPY settings.gradle.kts .
-COPY gradlew .
+RUN chmod +x ./gradlew
 
 RUN ./gradlew --no-daemon dependencies
 
-COPY src src
+COPY app/src src
 
-COPY --from=frontend /frontend/dist /backend/src/main/resources/static
+RUN ./gradlew --no-daemon installDist
 
-RUN ./gradlew --no-daemon build
+FROM eclipse-temurin:21-jre
 
-ENV JAVA_OPTS "-Xmx512M -Xms512M"
+WORKDIR /opt/app
+
+COPY --from=builder /app/build/install/app /opt/app
+
 EXPOSE 8080
 
-CMD java -jar build/libs/HexletSpringBlog-1.0-SNAPSHOT.jar
+ENV JAVA_OPTS=""
+
+CMD ["/opt/app/bin/app"]
