@@ -140,7 +140,8 @@ public class AppTest {
             assertThat(addResponse.code()).isIn(200, 302);
 
             var created = UrlRepository.getEntities().stream()
-                    .filter(u -> u.getName().equals(pageUrl.replaceAll("/$", ""))) // нормализация убирает завершающий '/'
+                    .filter(u -> u.getName()
+                    .equals(pageUrl.replaceAll("/$", "")))
                     .findFirst().orElseThrow();
 
             var checkResponse = client.post("/urls/" + created.getId() + "/checks");
