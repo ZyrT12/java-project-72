@@ -34,7 +34,9 @@ public class AppTest {
 
     private static String readFixture(String path) throws IOException {
         try (var is = AppTest.class.getClassLoader().getResourceAsStream(path)) {
-            assertThat(is).as("fixture not found: " + path).isNotNull();
+            if (is == null) {
+                throw new IOException("fixture not found: " + path);
+            }
             try (var br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
                 var sb = new StringBuilder();
                 String line;
@@ -49,6 +51,7 @@ public class AppTest {
     @BeforeAll
     public static void mockStart() throws IOException {
         fixtureHtml = readFixture("fixtures/page.html");
+        assertThat(fixtureHtml).isNotBlank();
         mockServer = new MockWebServer();
         mockServer.start();
     }

@@ -5,18 +5,18 @@ import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
 import hexlet.code.utils.NamedRoutes;
 import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
+import io.javalin.http.NotFoundResponse;
 
 import java.net.URI;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 public final class UrlsController {
 
-    private static final int BAD_REQUEST = 400;
-    private UrlsController() { }
+    private UrlsController() {
+    }
 
     public static void index(Context ctx) throws SQLException {
         var urls = UrlRepository.getUrlsAndLastCheck();
@@ -26,19 +26,13 @@ public final class UrlsController {
         model.put("flash", ctx.consumeSessionAttribute("flash"));
         model.put("flashType", ctx.consumeSessionAttribute("flashType"));
 
+        ctx.status(HttpStatus.OK);
         ctx.render("urls/index.jte", model);
     }
 
     public static void show(Context ctx) throws SQLException {
         long urlId = ctx.pathParamAsClass("id", Long.class).get();
-
-        Optional<Url> urlOpt = UrlRepository.findById(urlId);
-        if (urlOpt.isEmpty()) {
-            ctx.status(404).result("URL not found");
-            return;
-        }
-
-        var url = urlOpt.get();
+        Url url = UrlRepository.findById(urlId).orElseThrow(() -> new NotFoundResponse("URL not found"));
         var urlChecks = UrlCheckRepository.getEntitiesByUrl(url);
 
         Map<String, Object> model = new HashMap<>();
@@ -47,11 +41,11 @@ public final class UrlsController {
         model.put("flash", ctx.consumeSessionAttribute("flash"));
         model.put("flashType", ctx.consumeSessionAttribute("flashType"));
 
+        ctx.status(HttpStatus.OK);
         ctx.render("urls/show.jte", model);
     }
 
     public static void create(Context ctx) throws SQLException {
-
         var raw = ctx.formParamAsClass("url", String.class).getOrDefault("").trim();
 
         URI parsed;
@@ -61,7 +55,7 @@ public final class UrlsController {
             var page = new hexlet.code.dto.BasePage();
             page.setFlash("Некорректный URL");
             page.setFlashType("danger");
-            ctx.status(BAD_REQUEST);
+            ctx.status(HttpStatus.BAD_REQUEST);
             ctx.render("root.jte", java.util.Collections.singletonMap("page", page));
             return;
         }
@@ -75,7 +69,6 @@ public final class UrlsController {
         }
 
         var url = new Url(normalized);
-        url.setCreatedAt(LocalDateTime.now());
         UrlRepository.save(url);
 
         flash(ctx, "Страница успешно добавлена", "success");

@@ -9,6 +9,7 @@ import hexlet.code.repository.BaseRepository;
 import hexlet.code.utils.NamedRoutes;
 import hexlet.code.utils.TemplateResolve;
 import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
 import io.javalin.rendering.template.JavalinJte;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,23 +39,19 @@ public final class App {
         }
     }
 
+    private static void configure(JavalinConfig config) {
+        config.bundledPlugins.enableDevLogging();
+        config.fileRenderer(new JavalinJte(TemplateResolve.createTemplateEngine()));
+        config.staticFiles.add(staticFiles -> {
+            staticFiles.directory = "public";
+            staticFiles.hostedPath = "/";
+        });
+    }
+
     public static Javalin getApp() throws IOException, SQLException {
         log.info("Starting application initialization");
 
-        var app = Javalin.create(config -> {
-            config.bundledPlugins.enableDevLogging();
-            config.fileRenderer(new JavalinJte(TemplateResolve.createTemplateEngine()));
-        });
-
-        app.get("/style.css", ctx -> {
-            ctx.contentType("text/css");
-            InputStream cssStream = App.class.getResourceAsStream("/templates/style.css");
-            if (cssStream != null) {
-                ctx.result(cssStream);
-            } else {
-                ctx.status(404).result("CSS file not found");
-            }
-        });
+        var app = Javalin.create(App::configure);
 
         var hikariConfig = new HikariConfig();
         hikariConfig.setJdbcUrl(getDBUrl());

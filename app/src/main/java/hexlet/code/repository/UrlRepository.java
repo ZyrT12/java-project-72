@@ -15,7 +15,7 @@ public class UrlRepository extends BaseRepository {
 
     public static void save(Url url) throws SQLException {
         String sql = "INSERT INTO urls (name, created_at) VALUES (?, ?)";
-        LocalDateTime now = url.getCreatedAt() != null ? url.getCreatedAt() : LocalDateTime.now();
+        var now = LocalDateTime.now();
 
         try (var conn = BaseRepository.getDataSource().getConnection();
              var ps = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
@@ -30,7 +30,9 @@ public class UrlRepository extends BaseRepository {
                 }
             }
         }
+        url.setCreatedAt(now);
     }
+
 
     public static boolean isExist(String name) throws SQLException {
         String sql = "SELECT id FROM urls WHERE name = ?";
