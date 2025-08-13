@@ -16,10 +16,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterEach;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,19 +33,8 @@ public class AppTest {
     private static String fixtureHtml;
 
     private static String readFixture(String path) throws IOException {
-        try (var is = AppTest.class.getClassLoader().getResourceAsStream(path)) {
-            if (is == null) {
-                throw new IOException("fixture not found: " + path);
-            }
-            try (var br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-                var sb = new StringBuilder();
-                String line;
-                while ((line = br.readLine()) != null) {
-                    sb.append(line).append('\n');
-                }
-                return sb.toString();
-            }
-        }
+        Path filePath = Path.of("src", "test", "resources", path);
+        return Files.readString(filePath, StandardCharsets.UTF_8);
     }
 
     @BeforeAll

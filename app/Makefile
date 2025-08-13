@@ -1,4 +1,3 @@
-# Makefile
 run-dist:
 	./build/install/app/bin/app
 
@@ -9,7 +8,7 @@ build:
 	./gradlew clean build
 
 install:
-	./gradlew clean install
+	./gradlew clean installDist
 
 run:
 	./gradlew run
@@ -22,4 +21,4 @@ lint:
 
 build-run: build run
 
-.PHONY: build
+.PHONY: run-dist clean build install run report lint build-run

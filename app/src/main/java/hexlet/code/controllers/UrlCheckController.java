@@ -10,7 +10,6 @@ import io.javalin.http.NotFoundResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 
 @Slf4j
 public final class UrlCheckController {
@@ -37,7 +36,6 @@ public final class UrlCheckController {
 
             var check = new UrlCheck(url, title, h1, description);
             check.setStatusCode(response.getStatus());
-            check.setCreatedAt(LocalDateTime.now());
 
             UrlCheckRepository.save(check, url);
 
