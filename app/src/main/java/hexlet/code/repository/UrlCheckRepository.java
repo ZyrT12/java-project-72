@@ -13,7 +13,8 @@ import java.util.Optional;
 public class UrlCheckRepository extends BaseRepository {
 
     public static void save(UrlCheck urlCheck, Url url) throws SQLException {
-        String sql = "INSERT INTO url_checks (url_id, status_code, title, h1, description, created_at) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO url_checks (url_id, status_code, title, h1, description, created_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
 
         LocalDateTime created = urlCheck.getCreatedAt() != null ? urlCheck.getCreatedAt() : LocalDateTime.now();
 
